@@ -22,7 +22,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Hero center content (gaming tournament focused) */}
+        {/* Centered hero content */}
         <header className="text-center py-12">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="flex -space-x-2">
@@ -35,11 +35,11 @@ export default function Home() {
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-4">Centaurus Arena — where champions clash</h1>
 
-          <p className="max-w-2xl mx-auto text-[#52525b] mb-8 text-base">Organize, join and stream competitive gaming tournaments. Fast setup, built-in brackets, live spectating and global leaderboards designed for players and organizers.</p>
+          <p className="max-w-2xl mx-auto text-[#52525b] mb-8 text-base">Register your university team. Compete live. Stream matches. Climb the leaderboards.</p>
 
-          <div className="flex items-center justify-center gap-4">
-            <button className="bg-[#111827] text-white px-6 py-3 rounded-full font-semibold">Explore Tournaments</button>
-            <button className="bg-white border border-[#d6d3d1] px-5 py-3 rounded-full">Organize Now</button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button className="bg-[#111827] text-white px-6 py-3 rounded-full font-semibold w-full sm:w-auto">Explore Tournaments</button>
+            <button className="bg-white border border-[#d6d3d1] px-5 py-3 rounded-full w-full sm:w-auto">Organize Now</button>
           </div>
         </header>
       </div>
