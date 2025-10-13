@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import DecryptedText from './DecryptedText';
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -153,7 +154,15 @@ export default function Home() {
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-extrabold tracking-tight mb-6">CENTAURUS ARENA</h1>
 
-          <p className="max-w-2xl mx-auto text-[#52525b] mb-10 text-base sm:text-lg md:text-xl">Register your university team. Compete live. Stream matches. Climb the leaderboards.</p>
+          <p className="max-w-2xl mx-auto text-[#52525b] mb-10 text-base sm:text-lg md:text-xl">
+            <DecryptedText
+              text="Register your university team. Compete live. Stream matches. Climb the leaderboards."
+              animateOn="both"
+              revealDirection="center"
+              speed={45}
+              maxIterations={28}
+            />
+          </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button className="bg-[#111827] text-white px-6 py-3 rounded-md font-semibold text-base w-full sm:w-auto">Explore Tournaments</button>

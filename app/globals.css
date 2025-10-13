@@ -44,3 +44,24 @@ body {
   box-shadow: 0 6px 16px rgba(11,14,20,0.06);
   border: 1px solid rgba(11,14,20,0.06);
 }
+
+/* DecryptedText styles */
+.encrypted {
+  color: rgba(16, 24, 39, 0.85); /* slightly dim to mimic encrypted chars */
+  letter-spacing: 0.02em;
+  transition: color 160ms ease, opacity 160ms ease, transform 160ms ease;
+  display: inline-block;
+}
+
+.all-letters {
+  display: inline-block;
+}
+
+.revealed {
+  color: inherit;
+}
+
+/* small subtle emphasis when decryption finishes */
+.revealed[aria-hidden="false"] {
+  transform: translateY(0);
+}
