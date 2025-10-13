@@ -30,8 +30,8 @@ body {
 
 /* Hero grid background: subtle light grid like the mock */
 .hero-grid {
-  background-image: linear-gradient(to right, rgba(11,14,20,0.03) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(11,14,20,0.03) 1px, transparent 1px);
+  /* Remove the grid lines for a clean background */
+  background-image: none;
   background-size: 88px 88px;
   background-position: center;
 }
@@ -65,3 +65,38 @@ body {
 .revealed[aria-hidden="false"] {
   transform: translateY(0);
 }
+
+/* Floating animations for decorative clusters */
+@keyframes floatY {
+  0% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-6px) rotate(-1deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(4px) rotate(1deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+.floating {
+  will-change: transform, opacity;
+  animation-name: floatY;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(.22,.9,.35,1);
+  animation-fill-mode: both;
+}
+
+/* Slight variations so groups look organic */
+.float-1 { animation-duration: 4.2s; animation-delay: 0.06s; }
+.float-2 { animation-duration: 3.8s; animation-delay: 0.18s; }
+.float-3 { animation-duration: 4.6s; animation-delay: 0.28s; }
+.float-4 { animation-duration: 5.1s; animation-delay: 0.12s; }
+
+/* Micro-hover for interactive feel */
+.floating:hover { transform: translateY(-4px) scale(1.03); transition: transform 220ms ease; }
+
+/* Slight shadow emphasis during animation */
+.floating::after {
+  content: '';
+  position: absolute;
+}
+
+/* Ensure the decorative wrappers keep positioning but allow transform */
+.pointer-events-none .floating { pointer-events: none; }

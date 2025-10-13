@@ -220,40 +220,40 @@ export default function Home() {
         {/* Centered hero content with decorative side images */}
         <header className="relative text-center pt-20 pb-12">
           {/* Left decorative cluster (visible on md+) */}
-      <div className="hidden md:flex pointer-events-none absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 gap-4 items-center">
-            <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center overflow-hidden rotate-[-6deg] translate-y-[-8px] border-2 border-black">
+          <div className="hidden md:flex pointer-events-none absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 gap-4 items-center">
+            <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center overflow-hidden rotate-[-6deg] translate-y-[-8px] border-2 border-black floating float-1">
               <img src="https://i.pinimg.com/736x/64/dd/db/64dddbf80576b4b57777fcbd42b5fc3d.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-20 h-20 rounded-xl shadow-sm flex items-center justify-center rotate-[8deg] translate-y+[8px] border-2 border-black overflow-hidden">
+            <div className="w-20 h-20 rounded-xl shadow-sm flex items-center justify-center rotate-[8deg] translate-y-[8px] border-2 border-black overflow-hidden floating float-2">
               <img src="https://i.pinimg.com/1200x/f0/44/83/f04483bbad609167bf64d0fd5dd7c0d8.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center rotate-[-4deg] translate-y+[2px] border-2 border-black overflow-hidden">
+            <div className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center rotate-[-4deg] translate-y-[2px] border-2 border-black overflow-hidden floating float-3">
               <img src="https://i.pinimg.com/736x/39/dc/66/39dc66a4fbaa85dcd12a49f216b60ead.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
           </div>
 
           {/* Right decorative cluster (visible on md+) */}
           <div className="hidden md:flex pointer-events-none absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 gap-4 items-center">
-            <div className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center rotate-[6deg] translate-y-[-6px] border-2 border-black overflow-hidden">
+            <div className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center rotate-[6deg] translate-y-[-6px] border-2 border-black overflow-hidden floating float-2">
               <img src="https://i.pinimg.com/1200x/20/10/15/201015dbde9311d1170d6bc9eb945d2a.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-20 h-20 rounded-2xl shadow-sm flex items-center justify-center rotate-[-8deg] translate-y+[6px] border-2 border-black overflow-hidden">
+            <div className="w-20 h-20 rounded-2xl shadow-sm flex items-center justify-center rotate-[-8deg] translate-y-[6px] border-2 border-black overflow-hidden floating float-3">
               <img src="https://i.pinimg.com/736x/93/f2/67/93f267d62e0b9fad885b6bc0f9768981.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center rotate-[4deg] translate-y+[2px] border-2 border-black overflow-hidden">
+            <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center rotate-[4deg] translate-y-[2px] border-2 border-black overflow-hidden floating float-4">
               <img src="https://i.pinimg.com/1200x/f4/0e/e0/f40ee0c794eb02b5cd83d00f0c98879b.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
           </div>
 
           {/* Mobile-friendly inline mini cluster (below title on small screens) */}
           <div className="flex md:hidden items-center justify-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-black overflow-hidden">
+            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-black overflow-hidden floating float-1">
               <img src="https://i.pinimg.com/736x/64/dd/db/64dddbf80576b4b57777fcbd42b5fc3d.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-black overflow-hidden">
+            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-black overflow-hidden floating float-2">
               <img src="https://i.pinimg.com/1200x/f0/44/83/f04483bbad609167bf64d0fd5dd7c0d8.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-black overflow-hidden">
+            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-black overflow-hidden floating float-3">
               <img src="https://i.pinimg.com/1200x/20/10/15/201015dbde9311d1170d6bc9eb945d2a.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
           </div>
