@@ -111,7 +111,7 @@ export default function Home() {
         </div>
 
         {/* Centered hero content with decorative side images */}
-        <header className="relative text-center py-12">
+        <header className="relative text-center pt-20 pb-12">
           {/* Left decorative cluster (visible on md+) */}
           <div className="hidden md:flex pointer-events-none absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 gap-4 items-center">
             <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center overflow-hidden rotate-[-6deg] translate-y-[-8px] border-2 border-black">
