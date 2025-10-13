@@ -2,6 +2,48 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import DecryptedText from './DecryptedText';
+import FadeContent from './FadeContent';
+import * as SiIcons from 'react-icons/si';
+import { FaGamepad } from 'react-icons/fa';
+
+// Animated inline SVG icon (react-icons) — uses IntersectionObserver to trigger a pop-up transition
+function AnimatedIcon({ Icon, label, delay = 0 }: { Icon: any; label?: string; delay?: number }) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current as Element | null;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisible(true);
+            obs.disconnect();
+          }
+        });
+      },
+      { threshold: 0.45 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <span
+      ref={ref as any}
+      aria-hidden
+      className={
+        `w-8 h-8 inline-flex items-center justify-center rounded-md shadow-sm transform transition-all duration-500 text-current ` +
+        (visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95')
+      }
+      style={{ transitionDelay: `${delay}ms` }}
+      title={label}
+    >
+      <Icon className="w-6 h-6" />
+    </span>
+  );
+}
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -38,6 +80,71 @@ export default function Home() {
       first?.focus();
     }
   }, [menuOpen]);
+
+  // Larger pool of game icon names (will dynamically resolve from react-icons/si with a fallback)
+  const allIconNames = [
+    'SiLeagueoflegends',
+    'SiDota2',
+    'SiValorant',
+    'SiFortnite',
+    'SiOverwatch',
+    'SiCallofduty',
+    'SiCounterstrike',
+    'SiMinecraft',
+    'SiRoblox',
+    'SiApexlegends',
+    'SiHearthstone',
+    'SiWorldofwarcraft',
+    'SiTwitch',
+    'SiSteam'
+  ];
+
+  const allIcons = allIconNames.map((name) => ({
+    name,
+    Icon: (SiIcons as any)[name] ?? FaGamepad,
+    label: name.replace(/^Si/, '').replace(/([A-Z])/g, ' $1').trim(),
+  }));
+
+  // Rotation state: show 4 icons at a time and rotate the window every 2 seconds
+  const [rotationStart, setRotationStart] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setRotationStart((s) => (s + 1) % allIcons.length);
+    }, 2000);
+    return () => clearInterval(id);
+  }, [allIcons.length]);
+
+  // Compute 4 visible icons with wrap-around
+  // Ensure the 4 visible icons are different visually (handle cases where multiple entries map to the same fallback Icon)
+  const getUniqueWindow = (start: number, count: number) => {
+    const picked: Array<typeof allIcons[0]> = [];
+    const seen = new Set<any>();
+    let checked = 0;
+    let idx = start;
+    // iterate until we collect `count` unique Icon references or we've inspected twice the list
+    while (picked.length < count && checked < allIcons.length * 2) {
+      const cand = allIcons[idx % allIcons.length];
+      const key = cand.Icon; // compare by component reference
+      if (!seen.has(key)) {
+        seen.add(key);
+        picked.push(cand);
+      }
+      idx++;
+      checked++;
+    }
+    // If we still don't have enough unique icons (rare), fill with next items (may duplicate)
+    idx = start;
+    while (picked.length < count && checked < allIcons.length * 4) {
+      const cand = allIcons[idx % allIcons.length];
+      picked.push(cand);
+      idx++;
+      checked++;
+    }
+    return picked;
+  };
+
+  const visibleIcons = getUniqueWindow(rotationStart, 4);
 
   return (
     <main className="min-h-screen bg-[#f5f5f5] text-[#111827] hero-grid">
@@ -101,20 +208,19 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Small stats placed between navbar and hero */}
+        {/* Replaced colored circles + text with animated game icons (react-icons Simple Icons) */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="flex -space-x-2">
-            <div className="w-8 h-8 rounded-full bg-[#ffd24d] border-2 border-white" />
-            <div className="w-8 h-8 rounded-full bg-[#f7dbe6] border-2 border-white" />
-            <div className="w-8 h-8 rounded-full bg-[#dfe7ff] border-2 border-white" />
+          <div className="flex items-center justify-center gap-3 text-[#52525b]">
+            {visibleIcons.map((g, idx) => (
+              <AnimatedIcon key={`${g.name}-${rotationStart}-${idx}`} Icon={g.Icon} label={g.label} delay={80 * (idx + 1)} />
+            ))}
           </div>
-          <span className="text-sm text-[#52525b]">Over 10+ games</span>
         </div>
 
         {/* Centered hero content with decorative side images */}
         <header className="relative text-center pt-20 pb-12">
           {/* Left decorative cluster (visible on md+) */}
-          <div className="hidden md:flex pointer-events-none absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 gap-4 items-center">
+      <div className="hidden md:flex pointer-events-none absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 gap-4 items-center">
             <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center overflow-hidden rotate-[-6deg] translate-y-[-8px] border-2 border-black">
               <img src="https://i.pinimg.com/736x/64/dd/db/64dddbf80576b4b57777fcbd42b5fc3d.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
@@ -165,8 +271,13 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="bg-[#111827] text-white px-6 py-3 rounded-md font-semibold text-base w-full sm:w-auto">Explore Tournaments</button>
-            <button className="bg-white border border-[#d6d3d1] px-5 py-3 rounded-md text-base w-full sm:w-auto">Organize Now</button>
+            <FadeContent delay={80} duration={600} threshold={0.2} className="w-full sm:w-auto">
+              <button className="bg-[#111827] text-white px-6 py-3 rounded-md font-semibold text-base w-full sm:w-auto">Explore Tournaments</button>
+            </FadeContent>
+
+            <FadeContent delay={180} duration={700} threshold={0.2} className="w-full sm:w-auto">
+              <button className="bg-white border border-[#d6d3d1] px-5 py-3 rounded-md text-base w-full sm:w-auto">Organize Now</button>
+            </FadeContent>
           </div>
         </header>
       </div>
