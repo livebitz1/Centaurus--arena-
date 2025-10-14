@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { SignedIn, SignedOut, UserButton, useClerk } from '@clerk/nextjs';
+import { SignedIn, SignedOut, UserButton, useClerk, useUser } from '@clerk/nextjs';
 
 export default function HeroNav() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,6 +20,22 @@ export default function HeroNav() {
     // openSignIn is provided by Clerk's client SDK
     openSignIn && openSignIn();
   };
+
+  // Get basic user info client-side
+  const { user, isSignedIn } = useUser();
+
+  // When the user becomes signed in, call our server endpoint to upsert their data
+  useEffect(() => {
+    if (!isMounted) return;
+    if (isSignedIn && user) {
+      // send user id to server where we securely fetch full info with Clerk Server SDK
+      fetch('/api/auth/callback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clerkId: user.id }),
+      }).catch((err) => console.error('Failed to upsert user', err));
+    }
+  }, [isMounted, isSignedIn, user]);
 
   // Close menu when clicking outside and on Escape; focus first item when opened
   useEffect(() => {
