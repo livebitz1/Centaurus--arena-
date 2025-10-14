@@ -5,6 +5,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --float-amp: 6px; /* base amplitude */
+  --float-duration-1: 5.2s;
+  --float-duration-2: 4.6s;
+  --float-duration-3: 5.8s;
+  --float-duration-4: 6.1s;
 }
 
 @theme inline {
@@ -45,6 +50,25 @@ body {
   border: 1px solid rgba(11,14,20,0.06);
 }
 
+/* Navbar link hover/focus styles: black background + white text with smooth transition */
+.nav-pill nav a,
+.nav-pill [role="menu"] a {
+  transition: background-color 180ms cubic-bezier(.22,.9,.35,1), color 180ms cubic-bezier(.22,.9,.35,1), transform 160ms ease;
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: inline-block;
+}
+
+.nav-pill nav a:hover,
+.nav-pill [role="menu"] a:hover,
+.nav-pill nav a:focus,
+.nav-pill [role="menu"] a:focus {
+  background: #0b1220; /* near-black used elsewhere */
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  outline: none;
+}
+
 /* DecryptedText styles */
 .encrypted {
   color: rgba(16, 24, 39, 0.85); /* slightly dim to mimic encrypted chars */
@@ -66,37 +90,47 @@ body {
   transform: translateY(0);
 }
 
-/* Floating animations for decorative clusters */
+/* Floating animations for decorative clusters (ultra-smooth, GPU-accelerated) */
 @keyframes floatY {
-  0% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-6px) rotate(-1deg); }
-  50% { transform: translateY(0) rotate(0deg); }
-  75% { transform: translateY(4px) rotate(1deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, calc(var(--float-amp) * -1), 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 .floating {
   will-change: transform, opacity;
   animation-name: floatY;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(.22,.9,.35,1);
+  /* subtle, smooth ease for natural motion */
+  animation-timing-function: cubic-bezier(0.22, 0.9, 0.3, 1);
   animation-fill-mode: both;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* ensure standard transform exists for compatibility and GPU compositing */
+  transform: translate3d(0,0,0);
+  -webkit-transform: translate3d(0,0,0);
 }
 
 /* Slight variations so groups look organic */
-.float-1 { animation-duration: 4.2s; animation-delay: 0.06s; }
-.float-2 { animation-duration: 3.8s; animation-delay: 0.18s; }
-.float-3 { animation-duration: 4.6s; animation-delay: 0.28s; }
-.float-4 { animation-duration: 5.1s; animation-delay: 0.12s; }
+.float-1 { animation-duration: var(--float-duration-1); animation-delay: 0.06s; }
+.float-2 { animation-duration: var(--float-duration-2); animation-delay: 0.18s; }
+.float-3 { animation-duration: var(--float-duration-3); animation-delay: 0.28s; }
+.float-4 { animation-duration: var(--float-duration-4); animation-delay: 0.12s; }
 
-/* Micro-hover for interactive feel */
-.floating:hover { transform: translateY(-4px) scale(1.03); transition: transform 220ms ease; }
-
-/* Slight shadow emphasis during animation */
-.floating::after {
-  content: '';
-  position: absolute;
-}
+/* Micro-hover for interactive feel (use translate only for smoothness) */
+.floating:hover { transform: translate3d(0,-3px,0); transition: transform 220ms ease; }
 
 /* Ensure the decorative wrappers keep positioning but allow transform */
 .pointer-events-none .floating { pointer-events: none; }
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .floating { animation: none !important; transform: none !important; }
+}

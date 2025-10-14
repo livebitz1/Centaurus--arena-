@@ -5,6 +5,7 @@ import DecryptedText from './DecryptedText';
 import FadeContent from './FadeContent';
 import * as SiIcons from 'react-icons/si';
 import { FaGamepad } from 'react-icons/fa';
+import HeroNav from './HeroNav';
 
 // Animated inline SVG icon (react-icons) — uses IntersectionObserver to trigger a pop-up transition
 function AnimatedIcon({ Icon, label, delay = 0 }: { Icon: any; label?: string; delay?: number }) {
@@ -149,64 +150,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#f5f5f5] text-[#111827] hero-grid">
       <div className="max-w-5xl mx-auto px-6 py-16">
-        {/* Centered nav pill */}
-        <div className="flex justify-center mb-8 relative">
-          <div className="nav-pill flex items-center gap-6" ref={navRef}>
-            <div className="w-8 h-8 bg-[#111827] rounded-full flex items-center justify-center text-white text-sm">C</div>
-
-            <nav className="hidden sm:flex items-center gap-6 text-sm text-[#111827]">
-              <a className="opacity-90">Home</a>
-              <a className="opacity-90">Tournaments</a>
-              <a className="opacity-90">Teams</a>
-              <a className="opacity-90">Schedule</a>
-              <a className="opacity-90">Leaderboard</a>
-            </nav>
-
-            <button className="ml-auto bg-[#111827] text-white px-4 py-2 rounded-full text-sm hidden sm:inline-block">Create Tournament</button>
-
-            {/* Mobile menu button */}
-            <button
-              type="button"
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((s) => !s)}
-              className="sm:hidden ml-auto p-2 rounded-md bg-transparent hover:bg-[rgba(17,24,39,0.06)]"
-            >
-              {menuOpen ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <path d="M6 6L18 18M6 18L18 6" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <path d="M4 7h16M4 12h16M4 17h16" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Mobile dropdown menu (centered under the pill) - always in DOM to allow smooth transition */}
-          <div
-            ref={menuRef}
-            role="menu"
-            aria-hidden={!menuOpen}
-            className={`absolute top-full mt-3 left-1/2 transform -translate-x-1/2 w-[90%] max-w-sm bg-white rounded-lg shadow-lg z-20 transition-all duration-200 ease-out ${
-              menuOpen
-                ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
-                : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'
-            }`}
-          >
-            <div className="flex flex-col p-4 gap-2 text-center">
-              <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Home</a>
-              <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Tournaments</a>
-              <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Teams</a>
-              <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Schedule</a>
-              <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Leaderboard</a>
-              <div className="pt-2">
-                <button tabIndex={menuOpen ? 0 : -1} className="bg-[#111827] text-white px-4 py-2 rounded-full w-full">Create Tournament</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Centered nav pill (extracted to component) */}
+        <HeroNav />
 
         {/* Replaced colored circles + text with animated game icons (react-icons Simple Icons) */}
         <div className="flex items-center justify-center gap-3 mb-6">
