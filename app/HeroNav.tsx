@@ -83,24 +83,47 @@ export default function HeroNav() {
           )}
         </div>
 
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((s) => !s)}
-          className="sm:hidden ml-auto p-2 rounded-md bg-transparent hover:bg-[rgba(17,24,39,0.06)]"
-        >
-          {menuOpen ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <path d="M6 6L18 18M6 18L18 6" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+        {/* Mobile menu button or mobile Sign In (when signed out) */}
+        <div className="sm:hidden ml-auto">
+          {isMounted ? (
+            <>
+              <SignedOut>
+                {/* When not authenticated on mobile: show Sign In instead of the menu button */}
+                <button
+                  type="button"
+                  onClick={handleOpenSignIn}
+                  className="p-2 rounded-md bg-transparent hover:bg-[rgba(17,24,39,0.06)]"
+                >
+                  <span className="sr-only">Sign in</span>
+                  <span className="bg-[#111827] text-white px-3 py-1 rounded-full text-sm">Sign In</span>
+                </button>
+              </SignedOut>
+
+              <SignedIn>
+                {/* When authenticated on mobile: show the menu toggle (in addition to the UserButton already rendered) */}
+                <button
+                  type="button"
+                  aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((s) => !s)}
+                  className="p-2 rounded-md bg-transparent hover:bg-[rgba(17,24,39,0.06)]"
+                >
+                  {menuOpen ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                      <path d="M6 6L18 18M6 18L18 6" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                      <path d="M4 7h16M4 12h16M4 17h16" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </button>
+              </SignedIn>
+            </>
           ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <path d="M4 7h16M4 12h16M4 17h16" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <div style={{ width: 40 }} />
           )}
-        </button>
+        </div>
       </div>
 
       {/* Mobile dropdown menu (centered under the pill) - always in DOM to allow smooth transition */}
