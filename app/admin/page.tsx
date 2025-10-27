@@ -39,6 +39,8 @@ function AdminContent() {
   const [regsOpen, setRegsOpen] = useState(false)
   const [currentRegs, setCurrentRegs] = useState<any[]>([])
   const [currentTournamentId, setCurrentTournamentId] = useState<string | null>(null)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [regsLoading, setRegsLoading] = useState<boolean>(false)
 
   const filtered = tournaments.filter((t) => {
     const matchesSearch = (t.title + " " + t.location + " " + t.game + " " + t.date)
@@ -139,6 +141,7 @@ function AdminContent() {
   async function openRegs(tid: string) {
     setCurrentTournamentId(tid)
     setRegsOpen(true)
+    setRegsLoading(true)
     try {
       const res = await fetch(`/api/admin/tournaments/${tid}/registrations`)
       const data = await res.json()
@@ -150,11 +153,14 @@ function AdminContent() {
     } catch (e) {
       console.error('Failed to fetch regs', e)
       setCurrentRegs([])
+    } finally {
+      setRegsLoading(false)
     }
   }
 
   // load tournaments from API
   useEffect(() => {
+    setLoading(true)
     fetch("/api/admin/tournaments")
       .then((r) => r.json())
       .then((data) => {
@@ -171,6 +177,7 @@ function AdminContent() {
         console.error('Failed to fetch tournaments', err)
         setTournaments([])
       })
+      .finally(() => setLoading(false))
   }, [])
 
   return (
@@ -283,63 +290,71 @@ function AdminContent() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((t, idx) => (
-          <Card key={t.id ?? `t-${idx}`} className="flex flex-col">
-            {/* Image for admin card */}
-            {t.img ? (
-              <div className="w-full h-40 md:h-48 bg-gray-50 overflow-hidden flex-shrink-0 relative">
-                <img src={t.img} alt={t.title || 'Tournament image'} className="w-full h-full object-cover object-center" />
-                <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/30 pointer-events-none" />
-              </div>
-            ) : (
-              <div className="w-full h-40 md:h-48 bg-gray-100 flex items-center justify-center text-sm text-muted-foreground">
-                No image
-              </div>
-            )}
-
-            <CardHeader className="pb-3">
-              <CardTitle className="line-clamp-2 text-lg">{t.title}</CardTitle>
-              <CardDescription className="text-xs">
-                {t.date} · {t.location}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Game</p>
-                  <p className="mt-1 font-semibold">{t.game}</p>
+      {loading ? (
+        <div className="w-full rounded-lg border p-8 flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-700 mb-4" />
+          <h3 className="text-lg font-semibold">Loading tournaments</h3>
+          <p className="text-sm text-muted-foreground mt-1">Fetching tournaments from the database — please wait.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((t, idx) => (
+            <Card key={t.id ?? `t-${idx}`} className="flex flex-col">
+              {/* Image for admin card */}
+              {t.img ? (
+                <div className="w-full h-40 md:h-48 bg-gray-50 overflow-hidden flex-shrink-0 relative">
+                  <img src={t.img} alt={t.title || 'Tournament image'} className="w-full h-full object-cover object-center" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/30 pointer-events-none" />
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Slots</p>
-                  <p className="mt-1 font-semibold">{t.slots}</p>
+              ) : (
+                <div className="w-full h-40 md:h-48 bg-gray-100 flex items-center justify-center text-sm text-muted-foreground">
+                  No image
                 </div>
-              </div>
+              )}
 
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => openEdit(t)} className="flex-1">
-                  <Edit2 className="mr-1 h-4 w-4" />
-                  <span className="hidden sm:inline">Edit</span>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDelete(t.id)} className="flex-1">
-                  <Trash2 className="mr-1 h-4 w-4" />
-                  <span className="hidden sm:inline">Delete</span>
-                </Button>
-                <Link href={`/tournament`}>
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
+              <CardHeader className="pb-3">
+                <CardTitle className="line-clamp-2 text-lg">{t.title}</CardTitle>
+                <CardDescription className="text-xs">
+                  {t.date} · {t.location}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Game</p>
+                    <p className="mt-1 font-semibold">{t.game}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Slots</p>
+                    <p className="mt-1 font-semibold">{t.slots}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" size="sm" onClick={() => openEdit(t)} className="flex-1">
+                    <Edit2 className="mr-1 h-4 w-4" />
+                    <span className="hidden sm:inline">Edit</span>
                   </Button>
-                </Link>
-                <Button variant="ghost" size="sm" onClick={() => openRegs(t.id)}>
-                  View
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  <Button variant="outline" size="sm" onClick={() => handleDelete(t.id)} className="flex-1">
+                    <Trash2 className="mr-1 h-4 w-4" />
+                    <span className="hidden sm:inline">Delete</span>
+                  </Button>
+                  <Link href={`/tournament`}>
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Button variant="ghost" size="sm" onClick={() => openRegs(t.id)}>
+                    View
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      {filtered.length === 0 && (
+      {filtered.length === 0 && !loading && (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12">
           <p className="text-sm text-muted-foreground">No tournaments found</p>
         </div>
@@ -458,63 +473,71 @@ function AdminContent() {
 
           <div className="mt-4 h-[78vh] overflow-auto">
             <div className="min-w-[1100px]">
-              <Table className="min-w-full">
-                <TableHeader className="sticky top-0 bg-card z-10">
-                  <TableRow>
-                    <TableHead>Team</TableHead>
-                    <TableHead>University</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Leader Name</TableHead>
-                    <TableHead>Leader Email</TableHead>
-                    <TableHead>Leader RegNo</TableHead>
-                    <TableHead>Leader Game ID</TableHead>
-                    <TableHead>Members</TableHead>
-                    <TableHead>Registered At</TableHead>
-                  </TableRow>
-                </TableHeader>
+              {regsLoading ? (
+                <div className="w-full h-56 flex flex-col items-center justify-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-700 mb-3" />
+                  <div className="text-sm font-medium">Loading registrations...</div>
+                  <div className="text-xs text-muted-foreground mt-1">Retrieving registration records — this may take a moment.</div>
+                </div>
+              ) : (
+                <Table className="min-w-full">
+                  <TableHeader className="sticky top-0 bg-card z-10">
+                    <TableRow>
+                      <TableHead>Team</TableHead>
+                      <TableHead>University</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Leader Name</TableHead>
+                      <TableHead>Leader Email</TableHead>
+                      <TableHead>Leader RegNo</TableHead>
+                      <TableHead>Leader Game ID</TableHead>
+                      <TableHead>Members</TableHead>
+                      <TableHead>Registered At</TableHead>
+                    </TableRow>
+                  </TableHeader>
 
-                <TableBody>
-                  {currentRegs.map((r) => {
-                    const leader = typeof r.leader === 'string' ? JSON.parse(r.leader || '{}') : r.leader || {}
-                    const members = typeof r.members === 'string' ? JSON.parse(r.members || '[]') : r.members || []
+                  <TableBody>
+                    {currentRegs.map((r) => {
+                      const leader = typeof r.leader === 'string' ? JSON.parse(r.leader || '{}') : r.leader || {}
+                      const members = typeof r.members === 'string' ? JSON.parse(r.members || '[]') : r.members || []
 
-                    return (
-                      <TableRow key={r.id}>
-                        <TableCell className="font-medium w-[220px]">{r.teamName}</TableCell>
-                        <TableCell className="w-[160px]">{r.university}</TableCell>
-                        <TableCell className="w-[120px]">{r.phone || '—'}</TableCell>
+                      return (
+                        <TableRow key={r.id}>
+                          <TableCell className="font-medium w-[220px]">{r.teamName}</TableCell>
+                          <TableCell className="w-[160px]">{r.university}</TableCell>
+                          <TableCell className="w-[120px]">{r.phone || '—'}</TableCell>
 
-                        <TableCell className="w-[160px]">{leader.name || '—'}</TableCell>
-                        <TableCell className="w-[220px] text-xs">{leader.email || '—'}</TableCell>
-                        <TableCell className="w-[140px] text-xs">{leader.registrationNo || '—'}</TableCell>
-                        <TableCell className="w-[140px] text-xs">{leader.gameId || '—'}</TableCell>
+                          <TableCell className="w-[160px]">{leader.name || '—'}</TableCell>
+                          <TableCell className="w-[220px] text-xs">{leader.email || '—'}</TableCell>
+                          <TableCell className="w-[140px] text-xs">{leader.registrationNo || '—'}</TableCell>
+                          <TableCell className="w-[140px] text-xs">{leader.gameId || '—'}</TableCell>
 
-                        <TableCell className="w-[300px] align-top">
-                          <details className="text-xs">
-                            <summary className="cursor-pointer">{members.length} member{members.length !== 1 ? 's' : ''}</summary>
-                            <div className="mt-2 space-y-2 max-h-44 overflow-auto pr-2">
-                              {members.map((m: any, i: number) => (
-                                <div key={i} className="text-xs">
-                                  <div className="font-medium">{m.name}</div>
-                                  <div className="text-muted-foreground">Reg: {m.registrationNo} · {m.email} · {m.gameId}</div>
-                                </div>
-                              ))}
-                            </div>
-                          </details>
-                        </TableCell>
+                          <TableCell className="w-[300px] align-top">
+                            <details className="text-xs">
+                              <summary className="cursor-pointer">{members.length} member{members.length !== 1 ? 's' : ''}</summary>
+                              <div className="mt-2 space-y-2 max-h-44 overflow-auto pr-2">
+                                {members.map((m: any, i: number) => (
+                                  <div key={i} className="text-xs">
+                                    <div className="font-medium">{m.name}</div>
+                                    <div className="text-muted-foreground">Reg: {m.registrationNo} · {m.email} · {m.gameId}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          </TableCell>
 
-                        <TableCell className="w-[160px] text-xs">{new Date(r.createdAt).toLocaleString()}</TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
+                          <TableCell className="w-[160px] text-xs">{new Date(r.createdAt).toLocaleString()}</TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
 
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-right text-xs">Total: {currentRegs.length} registration{currentRegs.length !== 1 ? 's' : ''}</TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-right text-xs">Total: {currentRegs.length} registration{currentRegs.length !== 1 ? 's' : ''}</TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+              )}
             </div>
           </div>
         </SheetContent>

@@ -20,12 +20,16 @@ export default function TournamentPage() {
   const { user, isSignedIn } = useUser();
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
+    setLoading(true)
     fetch('/api/admin/tournaments')
       .then((r) => r.json())
       .then((data) => setTournaments(data || []))
-      .catch(() => setTournaments([]));
+      .catch(() => setTournaments([]))
+      .finally(() => setLoading(false))
   }, []);
 
   const [query, setQuery] = useState('');
@@ -164,6 +168,7 @@ export default function TournamentPage() {
       return;
     }
 
+    setSubmitting(true)
     fetch(`/api/tournaments/${joiningTournament.id}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -184,7 +189,8 @@ export default function TournamentPage() {
       .catch((err) => {
         console.error('Registration request failed', err)
         alert('Failed to submit registration')
-      });
+      })
+      .finally(() => setSubmitting(false))
   };
 
   // derive unique game list from loaded tournaments
@@ -273,78 +279,86 @@ export default function TournamentPage() {
               </header>
 
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filtered.length ? (
-                      filtered.map((t) => (
-                          <article
-                              key={t.id}
-                              className="bg-white rounded-2xl shadow-sm border border-[#e6e6e9] overflow-hidden flex flex-col h-full text-[#0f1724]"
-                          >
-                              {/* Image */}
-                              <div className="w-full h-40 md:h-48 bg-gray-50 overflow-hidden flex-shrink-0 relative">
-                                  <img
-                                      src={t.img ?? undefined}
-                                      alt=""
-                                      className="w-full h-full object-cover object-center"
-                                  />
-                                  {/* subtle light overlay for readability */}
+                {loading ? (
+                  // show simple skeleton cards while loading
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div key={`skeleton-${i}`} className="rounded-lg border overflow-hidden">
+                      <div className="h-40 bg-gray-100 animate-pulse" />
+                      <div className="p-4">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse" />
+                        <div className="h-3 bg-gray-200 rounded w-1/2 mb-3 animate-pulse" />
+                        <div className="flex justify-between items-center">
+                          <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
+                          <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : filtered.length > 0 ? (
+                  filtered.map((t) => (
+                      <article key={t.id} className="rounded-lg border overflow-hidden flex flex-col">
+                          {t.img ? (
+                              <div className="h-40 w-full relative">
+                                  <img src={t.img} alt={t.title} className="w-full h-full object-cover object-center" />
                                   <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/40 pointer-events-none" />
                               </div>
+                          ) : (
+                              <div className="h-40 w-full bg-gradient-to-br from-gray-200 to-gray-100 flex items-center justify-center text-gray-500">No image</div>
+                          )}
 
-                              {/* Content area */}
-                              <div className="p-4 flex-1 flex flex-col justify-between">
-                                  <div>
-                                      <h3 className="text-lg md:text-xl font-semibold mb-1 leading-tight text-[#0f1724]">{t.title}</h3>
-                                      <div className="flex items-center gap-3 text-sm text-[#6b7280] mb-3">
-                                          <span>{t.date}</span>
-                                          <span className="hidden sm:inline">·</span>
-                                          <span className="hidden sm:inline">{t.location}</span>
-                                      </div>
-
-                                      <div className="flex items-center gap-2 mb-3">
-                                          <span className="inline-block text-xs px-2 py-1 bg-[#f3f4f6] rounded-full text-[#374151]">Game: {t.game}</span>
-                                      </div>
+                          <div className="p-4 flex-1 flex flex-col justify-between">
+                              <div>
+                                  <h3 className="text-lg md:text-xl font-semibold mb-1 leading-tight text-[#0f1724]">{t.title}</h3>
+                                  <div className="flex items-center gap-3 text-sm text-[#6b7280] mb-3">
+                                      <span>{t.date}</span>
+                                      <span className="hidden sm:inline">·</span>
+                                      <span className="hidden sm:inline">{t.location}</span>
                                   </div>
 
-                                  <div className="flex items-center justify-between mt-2 gap-4">
-                                      <div className="text-sm text-[#374151]">
-                                          <span className="block md:inline">Team slots: </span>
-                                          <span className="font-medium text-[#0f1724]">{t.slots}</span>
-                                          {/* Remaining teams shown on its own line for clarity */}
-                                          <div className="mt-1 text-xs text-[#9ca3af]">{Math.max(0, t.slots - (registrations[t.id] || 0))} remaining</div>
-                                      </div>
-
-                                      <div className="flex items-center gap-2">
-                                          <Link
-                                              href="#"
-                                              className="hidden sm:inline-flex items-center justify-center text-sm px-3 py-1.5 rounded-full border border-[#e6e6e9] text-[#0f1724] bg-white"
-                                          >
-                                              Details
-                                          </Link>
-                                          {(registrations[t.id] || 0) >= t.slots ? (
-                                              <button
-                                                  disabled
-                                                  className="text-sm bg-[#f3f4f6] text-[#9ca3af] px-3 py-1.5 rounded-full opacity-50 cursor-not-allowed"
-                                              >
-                                                  Full
-                                              </button>
-                                          ) : (
-                                              <button
-                                                  onClick={() => openJoinModal(t)}
-                                                  className="text-sm bg-[#111827] hover:bg-[#0b0b0b] text-white px-3 py-1.5 rounded-full whitespace-nowrap"
-                                              >
-                                                  Join
-                                              </button>
-                                          )}
-                                      </div>
+                                  <div className="flex items-center gap-2 mb-3">
+                                      <span className="inline-block text-xs px-2 py-1 bg-[#f3f4f6] rounded-full text-[#374151]">Game: {t.game}</span>
                                   </div>
                               </div>
-                          </article>
-                      ))
-                  ) : (
-                      <div className="col-span-full text-center py-12 text-[#6b7280]">
-                          No tournaments found for "{query}"
-                      </div>
-                  )}
+
+                              <div className="flex items-center justify-between mt-2 gap-4">
+                                  <div className="text-sm text-[#374151]">
+                                      <span className="block md:inline">Team slots: </span>
+                                      <span className="font-medium text-[#0f1724]">{t.slots}</span>
+                                      <div className="mt-1 text-xs text-[#9ca3af]">{Math.max(0, t.slots - (registrations[t.id] || 0))} remaining</div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                      <Link
+                                          href="#"
+                                          className="hidden sm:inline-flex items-center justify-center text-sm px-3 py-1.5 rounded-full border border-[#e6e6e9] text-[#0f1724] bg-white"
+                                      >
+                                          Details
+                                      </Link>
+                                      {(registrations[t.id] || 0) >= t.slots ? (
+                                          <button
+                                              disabled
+                                              className="text-sm bg-[#f3f4f6] text-[#9ca3af] px-3 py-1.5 rounded-full opacity-50 cursor-not-allowed"
+                                          >
+                                              Full
+                                          </button>
+                                      ) : (
+                                          <button
+                                              onClick={() => openJoinModal(t)}
+                                              className="text-sm bg-[#111827] hover:bg-[#0b0b0b] text-white px-3 py-1.5 rounded-full whitespace-nowrap"
+                                          >
+                                              Join
+                                          </button>
+                                      )}
+                                  </div>
+                              </div>
+                          </div>
+                      </article>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12 text-[#6b7280]">
+                      No tournaments found for "{query}"
+                  </div>
+                )}
               </section>
 
               <footer className="mt-12 text-center text-sm text-[#6b7280]">
