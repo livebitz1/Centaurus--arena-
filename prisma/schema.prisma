@@ -16,3 +16,14 @@ model User {
   image     String?
   createdAt DateTime @default(now())
 }
+
+model Tournament {
+  id        String   @id @default(cuid())
+  title     String
+  date      String
+  location  String
+  slots     Int
+  game      String
+  img       String
+  createdAt DateTime @default(now())
+}

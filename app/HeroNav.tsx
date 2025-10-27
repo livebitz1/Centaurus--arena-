@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { SignedIn, SignedOut, UserButton, useClerk, useUser } from '@clerk/nextjs';
 
 export default function HeroNav() {
@@ -74,11 +75,11 @@ export default function HeroNav() {
         <div className="w-8 h-8 bg-[#111827] rounded-full flex items-center justify-center text-white text-sm">C</div>
 
         <nav className="hidden sm:flex items-center gap-6 text-sm text-[#111827]">
-          <a className="opacity-90">Home</a>
-          <a className="opacity-90">Tournaments</a>
-          <a className="opacity-90">Teams</a>
-          <a className="opacity-90">Schedule</a>
-          <a className="opacity-90">Leaderboard</a>
+          <Link href="/" className="opacity-90">Home</Link>
+          <Link href="/tournament" className="opacity-90">Tournaments</Link>
+          <Link href="#" className="opacity-90">Teams</Link>
+          <Link href="#" className="opacity-90">Schedule</Link>
+          <Link href="#" className="opacity-90">Leaderboard</Link>
         </nav>
 
         {/* Auth area: render Clerk UI only after mount to avoid hydration mismatch */}
@@ -154,8 +155,8 @@ export default function HeroNav() {
         }`}
       >
         <div className="flex flex-col p-4 gap-2 text-center">
-          <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Home</a>
-          <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Tournaments</a>
+          <Link href="/" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Home</Link>
+          <Link href="/tournament" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Tournaments</Link>
           <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Teams</a>
           <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Schedule</a>
           <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Leaderboard</a>
