@@ -26,4 +26,19 @@ model Tournament {
   game      String
   img       String
   createdAt DateTime @default(now())
+
+  registrations Registration[]
+}
+
+model Registration {
+  id           String   @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+
+  teamName     String
+  university   String
+  phone        String?
+  leader       Json
+  members      Json
+  createdAt    DateTime @default(now())
 }

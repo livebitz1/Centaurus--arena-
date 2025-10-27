@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Trash2, Edit2, Eye, Filter, X } from "lucide-react"
+import { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption } from "@/components/ui/table"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from "@/components/ui/sheet"
 
 type Tournament = {
   id: string
@@ -34,6 +36,9 @@ function AdminContent() {
   const [editing, setEditing] = useState<Tournament | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState<Partial<Tournament>>({})
+  const [regsOpen, setRegsOpen] = useState(false)
+  const [currentRegs, setCurrentRegs] = useState<any[]>([])
+  const [currentTournamentId, setCurrentTournamentId] = useState<string | null>(null)
 
   const filtered = tournaments.filter((t) => {
     const matchesSearch = (t.title + " " + t.location + " " + t.game + " " + t.date)
@@ -129,6 +134,23 @@ function AdminContent() {
   function clearFilters() {
     setFilters({ game: "", location: "", slots: "" })
     setQuery("")
+  }
+
+  async function openRegs(tid: string) {
+    setCurrentTournamentId(tid)
+    setRegsOpen(true)
+    try {
+      const res = await fetch(`/api/admin/tournaments/${tid}/registrations`)
+      const data = await res.json()
+      if (Array.isArray(data)) setCurrentRegs(data)
+      else {
+        console.error('Failed to load registrations', data)
+        setCurrentRegs([])
+      }
+    } catch (e) {
+      console.error('Failed to fetch regs', e)
+      setCurrentRegs([])
+    }
   }
 
   // load tournaments from API
@@ -308,6 +330,9 @@ function AdminContent() {
                     <Eye className="h-4 w-4" />
                   </Button>
                 </Link>
+                <Button variant="ghost" size="sm" onClick={() => openRegs(t.id)}>
+                  View
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -410,6 +435,90 @@ function AdminContent() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Sheet open={regsOpen} onOpenChange={setRegsOpen}>
+        <SheetContent side="bottom" className="w-full max-w-none h-[92vh] p-6">
+          <SheetHeader>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <SheetTitle>Registrations</SheetTitle>
+                <SheetDescription>List of team registrations for this tournament</SheetDescription>
+                <div className="mt-2 text-sm">Showing {currentRegs.length} registrations</div>
+              </div>
+              <div className="flex items-start gap-3">
+                {currentTournamentId && (
+                  <a href={`/api/admin/tournaments/${currentTournamentId}/registrations/export`} className="text-sm underline">
+                    Export CSV
+                  </a>
+                )}
+                <SheetClose className="ml-2">Close</SheetClose>
+              </div>
+            </div>
+          </SheetHeader>
+
+          <div className="mt-4 h-[78vh] overflow-auto">
+            <div className="min-w-[1100px]">
+              <Table className="min-w-full">
+                <TableHeader className="sticky top-0 bg-card z-10">
+                  <TableRow>
+                    <TableHead>Team</TableHead>
+                    <TableHead>University</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Leader Name</TableHead>
+                    <TableHead>Leader Email</TableHead>
+                    <TableHead>Leader RegNo</TableHead>
+                    <TableHead>Leader Game ID</TableHead>
+                    <TableHead>Members</TableHead>
+                    <TableHead>Registered At</TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {currentRegs.map((r) => {
+                    const leader = typeof r.leader === 'string' ? JSON.parse(r.leader || '{}') : r.leader || {}
+                    const members = typeof r.members === 'string' ? JSON.parse(r.members || '[]') : r.members || []
+
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium w-[220px]">{r.teamName}</TableCell>
+                        <TableCell className="w-[160px]">{r.university}</TableCell>
+                        <TableCell className="w-[120px]">{r.phone || '—'}</TableCell>
+
+                        <TableCell className="w-[160px]">{leader.name || '—'}</TableCell>
+                        <TableCell className="w-[220px] text-xs">{leader.email || '—'}</TableCell>
+                        <TableCell className="w-[140px] text-xs">{leader.registrationNo || '—'}</TableCell>
+                        <TableCell className="w-[140px] text-xs">{leader.gameId || '—'}</TableCell>
+
+                        <TableCell className="w-[300px] align-top">
+                          <details className="text-xs">
+                            <summary className="cursor-pointer">{members.length} member{members.length !== 1 ? 's' : ''}</summary>
+                            <div className="mt-2 space-y-2 max-h-44 overflow-auto pr-2">
+                              {members.map((m: any, i: number) => (
+                                <div key={i} className="text-xs">
+                                  <div className="font-medium">{m.name}</div>
+                                  <div className="text-muted-foreground">Reg: {m.registrationNo} · {m.email} · {m.gameId}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        </TableCell>
+
+                        <TableCell className="w-[160px] text-xs">{new Date(r.createdAt).toLocaleString()}</TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-right text-xs">Total: {currentRegs.length} registration{currentRegs.length !== 1 ? 's' : ''}</TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   )
 }

@@ -150,26 +150,41 @@ export default function TournamentPage() {
       alert(err);
       return;
     }
-    // Frontend-only: package team payload and log it
     const payload = {
-      tournamentId: joiningTournament?.id,
       teamName: form.teamName,
       university: form.university,
       phone: form.phone,
       leader: form.leader,
       members: form.members,
     };
-    console.log('Team join request', payload);
-    // Increment frontend registration count for this tournament
-    if (joiningTournament?.id) {
-      setRegistrations((prev) => ({
-        ...prev,
-        [joiningTournament.id]: (prev[joiningTournament.id] || 0) + 1,
-      }));
+
+    // Persist registration to server
+    if (!joiningTournament?.id) {
+      alert('No tournament selected');
+      return;
     }
-    // TODO: call API to persist registration
-    closeJoinModal();
-    alert('Team registration submitted (frontend only)');
+
+    fetch(`/api/tournaments/${joiningTournament.id}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.created?.id) {
+          // update registrations count from server
+          setRegistrations((prev) => ({ ...prev, [joiningTournament.id]: data.count }));
+          closeJoinModal();
+          alert('Registration submitted')
+        } else {
+          console.error('Registration API error', data)
+          alert(data?.error || 'Failed to submit registration')
+        }
+      })
+      .catch((err) => {
+        console.error('Registration request failed', err)
+        alert('Failed to submit registration')
+      });
   };
 
   // derive unique game list from loaded tournaments
