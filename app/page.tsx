@@ -6,6 +6,7 @@ import FadeContent from './FadeContent';
 import * as SiIcons from 'react-icons/si';
 import { FaGamepad } from 'react-icons/fa';
 import HeroNav from './HeroNav';
+import Link from 'next/link';
 
 // Animated inline SVG icon (react-icons) — uses IntersectionObserver to trigger a pop-up transition
 function AnimatedIcon({ Icon, label, delay = 0 }: { Icon: any; label?: string; delay?: number }) {
@@ -217,7 +218,9 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <FadeContent delay={80} duration={600} threshold={0.2} className="w-full sm:w-auto">
-              <button className="bg-[#111827] text-white px-6 py-3 rounded-md font-semibold text-base w-full sm:w-auto">Explore Tournaments</button>
+              <Link href="/tournament" className="bg-[#111827] text-white px-6 py-3 rounded-md font-semibold text-base w-full sm:w-auto inline-flex items-center justify-center">
+                Explore Tournaments
+              </Link>
             </FadeContent>
 
             <FadeContent delay={180} duration={700} threshold={0.2} className="w-full sm:w-auto">

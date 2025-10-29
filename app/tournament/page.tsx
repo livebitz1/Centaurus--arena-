@@ -19,6 +19,18 @@ type Tournament = {
 export default function TournamentPage() {
   const { user, isSignedIn } = useUser();
 
+  // helper to get a safe email from Clerk user resource
+  const getUserEmail = () => {
+    return (
+      user?.primaryEmailAddress?.emailAddress ||
+      user?.emailAddresses?.[0]?.emailAddress ||
+      undefined
+    );
+  };
+
+  // track tournaments this user has already registered for (client-side cache)
+  const [userRegisteredTournamentIds, setUserRegisteredTournamentIds] = useState<string[]>([]);
+
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -41,12 +53,67 @@ export default function TournamentPage() {
   // Track number of teams already registered per tournament (frontend-only state)
   const [registrations, setRegistrations] = useState<Record<string, number>>({});
 
-  // initialize registrations when tournaments load
+  // initialize registrations when tournaments load and poll server for realtime counts
   useEffect(() => {
-    const map: Record<string, number> = {};
-    tournaments.forEach((t) => (map[t.id] = 0));
-    setRegistrations(map);
+    // start with zeros for immediate UI response
+    const initial: Record<string, number> = {};
+    tournaments.forEach((t) => (initial[t.id] = 0));
+    setRegistrations(initial);
+
+    let mounted = true;
+
+    const fetchCounts = async () => {
+      try {
+        const res = await fetch('/api/tournaments/counts');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+
+        // Update only tournaments we know about (keep other keys unchanged)
+        setRegistrations((prev) => {
+          const next = { ...prev };
+          tournaments.forEach((t) => {
+            next[t.id] = Number(data?.[t.id] ?? 0);
+          });
+          return next;
+        });
+      } catch (err) {
+        // non-fatal; keep previous counts
+        console.error('Failed to fetch tournament counts', err);
+      }
+    };
+
+    // fetch once immediately and then poll every 5s for near-realtime updates
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 5000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, [tournaments]);
+
+  // fetch user's registered tournaments when we have an email from Clerk
+  useEffect(() => {
+    const email = getUserEmail();
+    if (!email) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const q = new URLSearchParams({ email: email.toString().trim().toLowerCase() }).toString();
+        const res = await fetch(`/api/tournaments/registered?${q}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        setUserRegisteredTournamentIds(Array.isArray(data.tournamentIds) ? data.tournamentIds : data.tournamentIds || []);
+      } catch (e) {
+        console.error('Failed to fetch user registered tournaments', e);
+      }
+    })();
+
+    return () => { mounted = false };
+  }, [user]);
 
   // modal state
   const [joinModalOpen, setJoinModalOpen] = useState(false);
@@ -77,10 +144,7 @@ export default function TournamentPage() {
       teamName: prev.teamName,
       leader: {
         name: (user?.fullName || user?.firstName) ?? prev.leader.name,
-        email:
-          user?.primaryEmailAddress?.emailAddress ||
-          user?.emailAddresses?.[0]?.emailAddress ||
-          prev.leader.email,
+        email: getUserEmail() ?? prev.leader.email,
         registrationNo: prev.leader.registrationNo,
         gameId: prev.leader.gameId,
       },
@@ -179,6 +243,8 @@ export default function TournamentPage() {
         if (data?.created?.id) {
           // update registrations count from server
           setRegistrations((prev) => ({ ...prev, [joiningTournament.id]: data.count }));
+          // mark user as registered for this tournament locally
+          setUserRegisteredTournamentIds((prev) => Array.from(new Set([...prev, joiningTournament.id])));
           closeJoinModal();
           alert('Registration submitted')
         } else {
@@ -328,18 +394,20 @@ export default function TournamentPage() {
                                   </div>
 
                                   <div className="flex items-center gap-2">
-                                      <Link
-                                          href="#"
-                                          className="hidden sm:inline-flex items-center justify-center text-sm px-3 py-1.5 rounded-full border border-[#e6e6e9] text-[#0f1724] bg-white"
-                                      >
-                                          Details
-                                      </Link>
                                       {(registrations[t.id] || 0) >= t.slots ? (
                                           <button
                                               disabled
                                               className="text-sm bg-[#f3f4f6] text-[#9ca3af] px-3 py-1.5 rounded-full opacity-50 cursor-not-allowed"
                                           >
                                               Full
+                                          </button>
+                                      ) : userRegisteredTournamentIds.includes(t.id) ? (
+                                          <button
+                                            disabled
+                                            title="You have already registered for this tournament"
+                                            className="text-sm bg-[#f3f4f6] text-[#9ca3af] px-3 py-1.5 rounded-full opacity-70 cursor-not-allowed"
+                                          >
+                                            Registered
                                           </button>
                                       ) : (
                                           <button
@@ -349,7 +417,7 @@ export default function TournamentPage() {
                                               Join
                                           </button>
                                       )}
-                                  </div>
+                                   </div>
                               </div>
                           </div>
                       </article>

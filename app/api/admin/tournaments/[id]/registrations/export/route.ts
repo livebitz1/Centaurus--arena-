@@ -9,19 +9,19 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     const regs = await prisma.registration.findMany({ where: { tournamentId }, orderBy: { createdAt: 'asc' } })
 
-    const parsed = regs.map((r) => {
-      const leader = typeof r.leader === 'string' ? JSON.parse(r.leader || '{}') : r.leader || {}
-      const members = typeof r.members === 'string' ? JSON.parse(r.members || '[]') : r.members || []
+    const parsed = (regs as Array<Record<string, unknown>>).map((r) => {
+      const leader = typeof (r as any).leader === 'string' ? JSON.parse((r as any).leader || '{}') : (r as any).leader || {}
+      const members = typeof (r as any).members === 'string' ? JSON.parse((r as any).members || '[]') : (r as any).members || []
       return { ...r, leader, members }
     })
 
-    const maxMembers = parsed.reduce((max, r) => Math.max(max, (r.members || []).length), 0)
+    const maxMembers = parsed.reduce((max, r) => Math.max(max, Array.isArray((r as any).members) ? ((r as any).members as Array<unknown>).length : 0), 0)
 
     const workbook = new ExcelJS.Workbook()
     const sheet = workbook.addWorksheet('Registrations')
 
     // Build headers
-    const headers = [
+    const headers: Array<Record<string, unknown>> = [
       { header: 'ID', key: 'id', width: 36 },
       { header: 'Team', key: 'teamName', width: 20 },
       { header: 'University', key: 'university', width: 20 },
@@ -30,7 +30,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       { header: 'Leader Email', key: 'leader_email', width: 30 },
       { header: 'Leader RegNo', key: 'leader_registrationNo', width: 18 },
       { header: 'Leader Game ID', key: 'leader_gameId', width: 18 },
-    ] as any[]
+    ]
 
     for (let i = 1; i <= maxMembers; i++) {
       headers.push({ header: `Member ${i} Name`, key: `member${i}_name`, width: 20 })
@@ -41,30 +41,30 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     headers.push({ header: 'Registered At', key: 'createdAt', width: 24 })
 
-    sheet.columns = headers
+    sheet.columns = headers as any
 
     // Add rows
     for (const r of parsed) {
-      const row: any = {
-        id: r.id,
-        teamName: r.teamName,
-        university: r.university,
-        phone: r.phone ?? '',
-        leader_name: r.leader?.name ?? '',
-        leader_email: r.leader?.email ?? '',
-        leader_registrationNo: r.leader?.registrationNo ?? '',
-        leader_gameId: r.leader?.gameId ?? '',
+      const row: Record<string, unknown> = {
+        id: (r as any).id,
+        teamName: (r as any).teamName,
+        university: (r as any).university,
+        phone: (r as any).phone ?? '',
+        leader_name: (r as any).leader?.name ?? '',
+        leader_email: (r as any).leader?.email ?? '',
+        leader_registrationNo: (r as any).leader?.registrationNo ?? '',
+        leader_gameId: (r as any).leader?.gameId ?? '',
       }
 
       for (let i = 0; i < maxMembers; i++) {
-        const m = r.members?.[i]
+        const m = (r as any).members?.[i]
         row[`member${i + 1}_name`] = m?.name ?? ''
         row[`member${i + 1}_registrationNo`] = m?.registrationNo ?? ''
         row[`member${i + 1}_email`] = m?.email ?? ''
         row[`member${i + 1}_gameId`] = m?.gameId ?? ''
       }
 
-      row.createdAt = r.createdAt ? new Date(r.createdAt).toISOString() : ''
+      row.createdAt = (r as any).createdAt ? new Date((r as any).createdAt as string).toISOString() : ''
 
       sheet.addRow(row)
     }
@@ -80,9 +80,10 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         'Content-Disposition': `attachment; filename=registrations-${tournamentId}.xlsx`,
       },
     })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Failed to generate XLSX export', err)
+    const message = err instanceof Error ? err.message : String(err)
     // fallback to CSV
-    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

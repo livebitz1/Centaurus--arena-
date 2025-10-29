@@ -76,6 +76,7 @@ export default function HeroNav() {
 
         <nav className="hidden sm:flex items-center gap-6 text-sm text-[#111827]">
           <Link href="/" className="opacity-90">Home</Link>
+          <Link href="/dashboard" className="opacity-90">Dashboard</Link>
           <Link href="/tournament" className="opacity-90">Tournaments</Link>
           <Link href="#" className="opacity-90">Teams</Link>
           <Link href="#" className="opacity-90">Schedule</Link>
@@ -156,6 +157,7 @@ export default function HeroNav() {
       >
         <div className="flex flex-col p-4 gap-2 text-center">
           <Link href="/" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Home</Link>
+          <Link href="/dashboard" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Dashboard</Link>
           <Link href="/tournament" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Tournaments</Link>
           <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Teams</a>
           <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Schedule</a>

@@ -41,6 +41,44 @@ function AdminContent() {
   const [currentTournamentId, setCurrentTournamentId] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [regsLoading, setRegsLoading] = useState<boolean>(false)
+  // registrations per tournament (used to show remaining slots)
+  const [registrations, setRegistrations] = useState<Record<string, number>>({})
+
+  // keep counts in sync with server; poll every 5s for near-realtime updates
+  useEffect(() => {
+    // initialize zeros so UI doesn't flicker
+    const initial: Record<string, number> = {}
+    tournaments.forEach((t) => (initial[t.id] = 0))
+    setRegistrations(initial)
+
+    let mounted = true
+
+    const fetchCounts = async () => {
+      try {
+        const res = await fetch('/api/tournaments/counts')
+        if (!res.ok) return
+        const data = await res.json()
+        if (!mounted) return
+        setRegistrations((prev) => {
+          const next = { ...prev }
+          tournaments.forEach((t) => {
+            next[t.id] = Number(data?.[t.id] ?? 0)
+          })
+          return next
+        })
+      } catch (e) {
+        console.error('Failed to fetch tournament counts', e)
+      }
+    }
+
+    // fetch immediately then poll
+    fetchCounts()
+    const interval = setInterval(fetchCounts, 5000)
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
+  }, [tournaments])
 
   const filtered = tournaments.filter((t) => {
     const matchesSearch = (t.title + " " + t.location + " " + t.game + " " + t.date)
@@ -326,7 +364,16 @@ function AdminContent() {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-muted-foreground">Slots</p>
-                    <p className="mt-1 font-semibold">{t.slots}</p>
+                    <p className="mt-1 font-semibold">{t.slots} total</p>
+                    <p className="text-xs text-muted-foreground mt-1">{Math.max(0, t.slots - (registrations[t.id] || 0))} remaining</p>
+
+                    {/* small progress bar */}
+                    <div className="w-full bg-gray-100 rounded-full h-2 mt-2 overflow-hidden">
+                      <div
+                        className="h-2 bg-green-500"
+                        style={{ width: `${Math.min(100, Math.round(((registrations[t.id] || 0) / Math.max(1, t.slots)) * 100))}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
 

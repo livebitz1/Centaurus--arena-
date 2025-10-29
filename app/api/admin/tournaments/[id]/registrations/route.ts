@@ -8,21 +8,22 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     if (!tournamentId) return NextResponse.json({ error: 'Missing tournament id' }, { status: 400 })
 
     // Use raw query as a robust fallback in case the generated delegate is not present at runtime
-    const rows: any[] = await client.$queryRaw`
+    const rows = await client.$queryRaw`
       SELECT * FROM "Registration" WHERE "tournamentId" = ${tournamentId} ORDER BY "createdAt" ASC
     `
 
     // Normalize fields: leader and members may be returned as JSON strings depending on the driver
-    const regs = rows.map((r) => ({
+    const regs = (rows as Array<Record<string, unknown>>).map((r) => ({
       ...r,
-      leader: typeof r.leader === 'string' ? JSON.parse(r.leader || 'null') : r.leader,
-      members: typeof r.members === 'string' ? JSON.parse(r.members || 'null') : r.members,
+      leader: typeof (r as any).leader === 'string' ? JSON.parse((r as any).leader || 'null') : (r as any).leader,
+      members: typeof (r as any).members === 'string' ? JSON.parse((r as any).members || 'null') : (r as any).members,
     }))
 
     return NextResponse.json(regs)
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Failed to fetch registrations', err)
-    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 })
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: message }, { status: 500 })
   } finally {
     try {
       await client.$disconnect()
