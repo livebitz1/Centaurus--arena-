@@ -27,6 +27,11 @@ model Tournament {
   img       String
   createdAt DateTime @default(now())
 
+  // Room info for admins to share with joined users
+  roomId       String?  // optional room / voice channel id
+  roomPassword String?  // optional password or PIN
+  showRoom     Boolean  @default(false) // admin-controlled visibility to users
+
   registrations Registration[]
 }
 

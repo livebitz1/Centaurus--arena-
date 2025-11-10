@@ -12,7 +12,7 @@ export async function GET(req: Request) {
 
     // fetch registrations where leader email or any member email matches
     const rows = await prisma.$queryRaw`
-      SELECT r.*, t.title as tournament_title, t.date as tournament_date, t.location as tournament_location, t.slots as tournament_slots, t.game as tournament_game, t.img as tournament_img
+      SELECT r.*, t.title as tournament_title, t.date as tournament_date, t.location as tournament_location, t.slots as tournament_slots, t.game as tournament_game, t.img as tournament_img, t."roomId" as tournament_roomId, t."roomPassword" as tournament_roomPassword, t."showRoom" as tournament_showRoom
       FROM "Registration" r
       JOIN "Tournament" t ON t.id = r."tournamentId"
       WHERE LOWER(COALESCE(r.leader->>'email', '')) = ${email}

@@ -7,6 +7,7 @@ import * as SiIcons from 'react-icons/si';
 import { FaGamepad } from 'react-icons/fa';
 import HeroNav from './HeroNav';
 import Link from 'next/link';
+import Squares from './Squares';
 
 // Animated inline SVG icon (react-icons) — uses IntersectionObserver to trigger a pop-up transition
 function AnimatedIcon({ Icon, label, delay = 0 }: { Icon: any; label?: string; delay?: number }) {
@@ -149,14 +150,26 @@ export default function Home() {
   const visibleIcons = getUniqueWindow(rotationStart, 4);
 
   return (
-    <main className="min-h-screen bg-[#f5f5f5] text-[#111827] hero-grid">
-      <div className="max-w-5xl mx-auto px-6 py-16">
+    <main className="min-h-screen bg-gradient-to-br from-[#0d0d0d] via-[#1a1a1a] to-[#0d0d0d] text-white hero-grid relative">
+      {/* Animated background squares */}
+      <div className="absolute inset-0 overflow-hidden">
+        <Squares 
+          speed={0.5} 
+          squareSize={40} 
+          direction="diagonal" 
+          borderColor="#333333" 
+          hoverFillColor="#ffffff" 
+        />
+      </div>
+      
+      {/* Main content */}
+      <div className="max-w-5xl mx-auto px-6 py-16 relative z-10">
         {/* Centered nav pill (extracted to component) */}
         <HeroNav />
 
         {/* Replaced colored circles + text with animated game icons (react-icons Simple Icons) */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="flex items-center justify-center gap-3 text-[#52525b]">
+          <div className="flex items-center justify-center gap-3 text-white">
             {visibleIcons.map((g, idx) => (
               <AnimatedIcon key={`${g.name}-${rotationStart}-${idx}`} Icon={g.Icon} label={g.label} delay={80 * (idx + 1)} />
             ))}
@@ -167,46 +180,46 @@ export default function Home() {
         <header className="relative text-center pt-20 pb-12">
           {/* Left decorative cluster (visible on md+) */}
           <div className="hidden md:flex pointer-events-none absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 gap-4 items-center">
-            <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center overflow-hidden rotate-[-6deg] translate-y-[-8px] border-2 border-black floating float-1">
+            <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center overflow-hidden rotate-[-6deg] translate-y-[-8px] border-2 border-white floating float-1">
               <img src="https://i.pinimg.com/736x/64/dd/db/64dddbf80576b4b57777fcbd42b5fc3d.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-20 h-20 rounded-xl shadow-sm flex items-center justify-center rotate-[8deg] translate-y-[8px] border-2 border-black overflow-hidden floating float-2">
+            <div className="w-20 h-20 rounded-xl shadow-sm flex items-center justify-center rotate-[8deg] translate-y-[8px] border-2 border-white overflow-hidden floating float-2">
               <img src="https://i.pinimg.com/1200x/f0/44/83/f04483bbad609167bf64d0fd5dd7c0d8.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center rotate-[-4deg] translate-y-[2px] border-2 border-black overflow-hidden floating float-3">
+            <div className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center rotate-[-4deg] translate-y-[2px] border-2 border-white overflow-hidden floating float-3">
               <img src="https://i.pinimg.com/736x/39/dc/66/39dc66a4fbaa85dcd12a49f216b60ead.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
           </div>
 
           {/* Right decorative cluster (visible on md+) */}
           <div className="hidden md:flex pointer-events-none absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 gap-4 items-center">
-            <div className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center rotate-[6deg] translate-y-[-6px] border-2 border-black overflow-hidden floating float-2">
+            <div className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center rotate-[6deg] translate-y-[-6px] border-2 border-white overflow-hidden floating float-2">
               <img src="https://i.pinimg.com/1200x/20/10/15/201015dbde9311d1170d6bc9eb945d2a.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-20 h-20 rounded-2xl shadow-sm flex items-center justify-center rotate-[-8deg] translate-y-[6px] border-2 border-black overflow-hidden floating float-3">
+            <div className="w-20 h-20 rounded-2xl shadow-sm flex items-center justify-center rotate-[-8deg] translate-y-[6px] border-2 border-white overflow-hidden floating float-3">
               <img src="https://i.pinimg.com/736x/93/f2/67/93f267d62e0b9fad885b6bc0f9768981.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center rotate-[4deg] translate-y-[2px] border-2 border-black overflow-hidden floating float-4">
+            <div className="w-16 h-16 rounded-xl shadow-sm flex items-center justify-center rotate-[4deg] translate-y-[2px] border-2 border-white overflow-hidden floating float-4">
               <img src="https://i.pinimg.com/1200x/f4/0e/e0/f40ee0c794eb02b5cd83d00f0c98879b.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
           </div>
 
           {/* Mobile-friendly inline mini cluster (below title on small screens) */}
           <div className="flex md:hidden items-center justify-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-black overflow-hidden floating float-1">
+            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-white overflow-hidden floating float-1">
               <img src="https://i.pinimg.com/736x/64/dd/db/64dddbf80576b4b57777fcbd42b5fc3d.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-black overflow-hidden floating float-2">
+            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-white overflow-hidden floating float-2">
               <img src="https://i.pinimg.com/1200x/f0/44/83/f04483bbad609167bf64d0fd5dd7c0d8.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
-            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-black overflow-hidden floating float-3">
+            <div className="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border-2 border-white overflow-hidden floating float-3">
               <img src="https://i.pinimg.com/1200x/20/10/15/201015dbde9311d1170d6bc9eb945d2a.jpg" alt="" className="w-full h-full object-cover opacity-90" />
             </div>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-extrabold tracking-tight mb-6">CENTAURUS ARENA</h1>
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-extrabold tracking-tight mb-6">CENTAURUS <span className="text-yellow-400">ARENA</span></h1>
 
-          <p className="max-w-2xl mx-auto text-[#52525b] mb-10 text-base sm:text-lg md:text-xl">
+          <p className="max-w-2xl mx-auto text-gray-400 mb-10 text-base sm:text-lg md:text-xl">
             <DecryptedText
               text="Register your university team. Compete live. Stream matches. Climb the leaderboards."
               animateOn="both"
@@ -218,13 +231,13 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <FadeContent delay={80} duration={600} threshold={0.2} className="w-full sm:w-auto">
-              <Link href="/tournament" className="bg-[#111827] text-white px-6 py-3 rounded-md font-semibold text-base w-full sm:w-auto inline-flex items-center justify-center">
+              <Link href="/tournament" className="bg-white text-black px-6 py-3 rounded-md font-semibold text-base w-full sm:w-auto inline-flex items-center justify-center shadow-lg hover:bg-gray-100 transition-all">
                 Explore Tournaments
               </Link>
             </FadeContent>
 
             <FadeContent delay={180} duration={700} threshold={0.2} className="w-full sm:w-auto">
-              <button className="bg-white border border-[#d6d3d1] px-5 py-3 rounded-md text-base w-full sm:w-auto">Organize Now</button>
+              <button className="bg-black/20 backdrop-blur-sm border border-white/20 px-5 py-3 rounded-md text-base w-full sm:w-auto text-white hover:bg-black/30 transition-all">Organize Now</button>
             </FadeContent>
           </div>
         </header>

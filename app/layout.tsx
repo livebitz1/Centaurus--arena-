@@ -27,9 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" className="dark">
         <body
-          className={`${orbitron.variable} ${geistMono.variable} antialiased`}
+          className={`${orbitron.variable} ${geistMono.variable} antialiased dark`}
         >
           {children}
         </body>

@@ -20,6 +20,9 @@ type Tournament = {
   slots: number
   game: string
   img: string
+  roomId?: string
+  roomPassword?: string
+  showRoom?: boolean
 }
 
 type Filters = {
@@ -41,6 +44,9 @@ function AdminContent() {
   const [currentTournamentId, setCurrentTournamentId] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [regsLoading, setRegsLoading] = useState<boolean>(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmData, setConfirmData] = useState<{ id?: string; title?: string; showRoom?: boolean; roomId?: string | null; roomPassword?: string | null } | null>(null)
+
   // registrations per tournament (used to show remaining slots)
   const [registrations, setRegistrations] = useState<Record<string, number>>({})
 
@@ -98,7 +104,7 @@ function AdminContent() {
   const hasActiveFilters = filters.game || filters.location || filters.slots
 
   function openCreate() {
-    setForm({ title: "", date: "", location: "", slots: 8, game: "", img: "" })
+    setForm({ title: "", date: "", location: "", slots: 8, game: "", img: "", roomId: "", roomPassword: "", showRoom: false })
     setEditing(null)
     setModalOpen(true)
   }
@@ -117,7 +123,7 @@ function AdminContent() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.title || !form.date || !form.location || !form.game || !form.slots || !form.img) {
+    if (!form.title || !form.date || !form.location || !form.game || !form.slots || !form.img || !((form as any).roomId) || !((form as any).roomPassword)) {
       alert("Please fill all fields")
       return
     }
@@ -193,6 +199,32 @@ function AdminContent() {
       setCurrentRegs([])
     } finally {
       setRegsLoading(false)
+    }
+  }
+
+  function openConfirm(t: Tournament) {
+    setConfirmData({ id: t.id, title: t.title, showRoom: Boolean(t.showRoom), roomId: t.roomId ?? null, roomPassword: t.roomPassword ?? null })
+    setConfirmOpen(true)
+  }
+
+  async function confirmToggle() {
+    if (!confirmData?.id) return
+    try {
+      const desired = !confirmData.showRoom
+      const res = await fetch(`/api/admin/tournaments/${confirmData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showRoom: desired }),
+      })
+      const updated = await res.json()
+      if (updated && updated.id) {
+        setTournaments((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+      }
+    } catch (e) {
+      console.error('Failed to update showRoom via confirm', e)
+    } finally {
+      setConfirmOpen(false)
+      setConfirmData(null)
     }
   }
 
@@ -337,38 +369,38 @@ function AdminContent() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((t, idx) => (
-            <Card key={t.id ?? `t-${idx}`} className="flex flex-col">
-              {/* Image for admin card */}
+            <Card key={t.id ?? `t-${idx}`} className="flex flex-col bg-white/3 backdrop-blur-sm border border-white/6 rounded-2xl overflow-hidden transition-shadow hover:shadow-lg hover:shadow-black/40 p-0">
+              {/* Image for admin card (flush to top) */}
               {t.img ? (
-                <div className="w-full h-40 md:h-48 bg-gray-50 overflow-hidden flex-shrink-0 relative">
-                  <img src={t.img} alt={t.title || 'Tournament image'} className="w-full h-full object-cover object-center" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/30 pointer-events-none" />
+                <div className="w-full h-36 md:h-44 bg-gray-900/10 overflow-hidden flex-shrink-0 relative rounded-t-2xl">
+                  <img src={t.img} alt={t.title || 'Tournament image'} className="w-full h-full object-cover object-center rounded-t-2xl" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-black/30 pointer-events-none rounded-t-2xl" />
                 </div>
               ) : (
-                <div className="w-full h-40 md:h-48 bg-gray-100 flex items-center justify-center text-sm text-muted-foreground">
+                <div className="w-full h-36 md:h-44 bg-white/5 flex items-center justify-center text-sm text-gray-300 rounded-t-2xl">
                   No image
                 </div>
               )}
 
-              <CardHeader className="pb-3">
-                <CardTitle className="line-clamp-2 text-lg">{t.title}</CardTitle>
-                <CardDescription className="text-xs">
+              <CardHeader className="pb-2 px-4 pt-3 border-b border-white/6">
+                <CardTitle className="line-clamp-2 text-lg font-semibold text-white">{t.title}</CardTitle>
+                <CardDescription className="text-xs text-gray-400">
                   {t.date} · {t.location}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="flex-1 space-y-4 p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Game</p>
-                    <p className="mt-1 font-semibold">{t.game}</p>
+                    <p className="text-xs font-medium text-gray-300">Game</p>
+                    <p className="mt-1 font-semibold text-white truncate">{t.game}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Slots</p>
-                    <p className="mt-1 font-semibold">{t.slots} total</p>
-                    <p className="text-xs text-muted-foreground mt-1">{Math.max(0, t.slots - (registrations[t.id] || 0))} remaining</p>
+                    <p className="text-xs font-medium text-gray-300">Slots</p>
+                    <p className="mt-1 font-semibold text-white">{t.slots} total</p>
+                    <p className="text-xs text-gray-400 mt-1">{Math.max(0, t.slots - (registrations[t.id] || 0))} remaining</p>
 
                     {/* small progress bar */}
-                    <div className="w-full bg-gray-100 rounded-full h-2 mt-2 overflow-hidden">
+                    <div className="w-full bg-white/5 rounded-full h-2 mt-3 overflow-hidden">
                       <div
                         className="h-2 bg-green-500"
                         style={{ width: `${Math.min(100, Math.round(((registrations[t.id] || 0) / Math.max(1, t.slots)) * 100))}%` }}
@@ -377,21 +409,24 @@ function AdminContent() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" onClick={() => openEdit(t)} className="flex-1">
+                <div className="flex gap-2 pt-2 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => openEdit(t)} className="flex-1 min-w-[96px]">
                     <Edit2 className="mr-1 h-4 w-4" />
                     <span className="hidden sm:inline">Edit</span>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(t.id)} className="flex-1">
+                  <Button variant="outline" size="sm" onClick={() => handleDelete(t.id)} className="flex-1 min-w-[96px]">
                     <Trash2 className="mr-1 h-4 w-4" />
                     <span className="hidden sm:inline">Delete</span>
                   </Button>
+                  <Button variant="outline" size="sm" onClick={() => openConfirm(t)} className="min-w-[110px]">
+                    {t.showRoom ? 'Hide Room' : 'Share Room'}
+                  </Button>
                   <Link href={`/tournament`}>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="min-w-[46px]">
                       <Eye className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Button variant="ghost" size="sm" onClick={() => openRegs(t.id)}>
+                  <Button variant="ghost" size="sm" onClick={() => openRegs(t.id)} className="min-w-[66px]">
                     View
                   </Button>
                 </div>
@@ -486,6 +521,42 @@ function AdminContent() {
               />
             </div>
 
+            {/* Room info: ID / Password and visibility toggle */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="roomId">Room ID</Label>
+                <Input
+                  id="roomId"
+                  value={(form as any).roomId || ""}
+                  onChange={(e) => setForm((s) => ({ ...s, roomId: e.target.value }))}
+                  placeholder="Room / voice id"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="roomPassword">Room Password</Label>
+                <Input
+                  id="roomPassword"
+                  value={(form as any).roomPassword || ""}
+                  onChange={(e) => setForm((s) => ({ ...s, roomPassword: e.target.value }))}
+                  placeholder="Password or PIN"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                id="showRoom"
+                type="checkbox"
+                checked={Boolean((form as any).showRoom)}
+                onChange={(e) => setForm((s) => ({ ...s, showRoom: e.target.checked }))}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="showRoom" className="text-sm">Share room details with registered users</Label>
+            </div>
+
             <div className="flex gap-3 pt-4">
               <Button type="button" variant="outline" onClick={closeModal} className="flex-1 bg-transparent">
                 Cancel
@@ -495,6 +566,26 @@ function AdminContent() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="w-full max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Action</DialogTitle>
+            <DialogDescription>
+              {confirmData?.showRoom ? 'Hide' : 'Share'} the room details for "{confirmData?.title}" tournament?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)} className="flex-1 bg-transparent">
+              Cancel
+            </Button>
+            <Button type="button" onClick={confirmToggle} className="flex-1">
+              {confirmData?.showRoom ? 'Hide Room' : 'Share Room'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

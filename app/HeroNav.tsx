@@ -72,15 +72,15 @@ export default function HeroNav() {
   return (
     <div className="flex justify-center mb-8 relative">
       <div className="nav-pill flex items-center gap-6" ref={navRef}>
-        <div className="w-8 h-8 bg-[#111827] rounded-full flex items-center justify-center text-white text-sm">C</div>
+        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black text-sm shadow-lg">C</div>
 
-        <nav className="hidden sm:flex items-center gap-6 text-sm text-[#111827]">
-          <Link href="/" className="opacity-90">Home</Link>
-          <Link href="/dashboard" className="opacity-90">Dashboard</Link>
-          <Link href="/tournament" className="opacity-90">Tournaments</Link>
-          <Link href="#" className="opacity-90">Teams</Link>
-          <Link href="#" className="opacity-90">Schedule</Link>
-          <Link href="#" className="opacity-90">Leaderboard</Link>
+        <nav className="hidden sm:flex items-center gap-6 text-sm text-white">
+          <Link href="/">Home</Link>
+          <Link href="/dashboard">Dashboard</Link>
+          <Link href="/tournament">Tournaments</Link>
+          <Link href="#">Teams</Link>
+          <Link href="#">Schedule</Link>
+          <Link href="#">Leaderboard</Link>
         </nav>
 
         {/* Auth area: render Clerk UI only after mount to avoid hydration mismatch */}
@@ -88,7 +88,7 @@ export default function HeroNav() {
           {isMounted ? (
             <>
               <SignedOut>
-                <button onClick={handleOpenSignIn} className="bg-[#111827] text-white px-4 py-2 rounded-full text-sm hidden sm:inline-block">Sign In</button>
+                <button onClick={handleOpenSignIn} className="bg-white text-black px-4 py-2 rounded-full text-sm hidden sm:inline-block shadow-lg hover:bg-gray-100 transition-all">Sign In</button>
               </SignedOut>
 
               <SignedIn>
@@ -110,10 +110,10 @@ export default function HeroNav() {
                 <button
                   type="button"
                   onClick={handleOpenSignIn}
-                  className="p-2 rounded-md bg-transparent hover:bg-[rgba(17,24,39,0.06)]"
+                  className="p-2 rounded-md bg-transparent hover:bg-white/10"
                 >
                   <span className="sr-only">Sign in</span>
-                  <span className="bg-[#111827] text-white px-3 py-1 rounded-full text-sm">Sign In</span>
+                  <span className="bg-white text-black px-3 py-1 rounded-full text-sm shadow-lg">Sign In</span>
                 </button>
               </SignedOut>
 
@@ -124,15 +124,15 @@ export default function HeroNav() {
                   aria-label={menuOpen ? 'Close menu' : 'Open menu'}
                   aria-expanded={menuOpen}
                   onClick={() => setMenuOpen((s) => !s)}
-                  className="p-2 rounded-md bg-transparent hover:bg-[rgba(17,24,39,0.06)]"
+                  className="p-2 rounded-md bg-transparent hover:bg-white/10"
                 >
                   {menuOpen ? (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                      <path d="M6 6L18 18M6 18L18 6" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M6 6L18 18M6 18L18 6" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ) : (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                      <path d="M4 7h16M4 12h16M4 17h16" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M4 7h16M4 12h16M4 17h16" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   )}
                 </button>
@@ -149,24 +149,24 @@ export default function HeroNav() {
         ref={menuRef}
         role="menu"
         aria-hidden={!menuOpen}
-        className={`absolute top-full mt-3 left-1/2 transform -translate-x-1/2 w-[90%] max-w-sm bg-white rounded-lg shadow-lg z-20 transition-all duration-200 ease-out ${
+        className={`absolute top-full mt-3 left-1/2 transform -translate-x-1/2 w-[90%] max-w-sm bg-black/90 backdrop-blur-md rounded-lg shadow-2xl border border-white/20 z-20 transition-all duration-200 ease-out ${
           menuOpen
             ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
             : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'
         }`}
       >
         <div className="flex flex-col p-4 gap-2 text-center">
-          <Link href="/" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Home</Link>
-          <Link href="/dashboard" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Dashboard</Link>
-          <Link href="/tournament" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Tournaments</Link>
-          <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Teams</a>
-          <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Schedule</a>
-          <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-[#111827]">Leaderboard</a>
+          <Link href="/" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Home</Link>
+          <Link href="/dashboard" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Dashboard</Link>
+          <Link href="/tournament" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Tournaments</Link>
+          <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Teams</a>
+          <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Schedule</a>
+          <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Leaderboard</a>
           <div className="pt-2">
             {isMounted ? (
               <>
                 <SignedOut>
-                  <button tabIndex={menuOpen ? 0 : -1} onClick={handleOpenSignIn} className="bg-[#111827] text-white px-4 py-2 rounded-full w-full">Sign In</button>
+                  <button tabIndex={menuOpen ? 0 : -1} onClick={handleOpenSignIn} className="bg-white text-black px-4 py-2 rounded-full w-full shadow-lg hover:bg-gray-100 transition-all">Sign In</button>
                 </SignedOut>
 
                 <SignedIn>
