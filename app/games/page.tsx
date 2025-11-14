@@ -135,12 +135,11 @@ export default function GamesPage() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70 group-hover:opacity-90 transition duration-300" />
+                  {/* subtle overlay that doesn't block interactions */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-40 group-hover:opacity-60 transition duration-300 pointer-events-none z-10" />
 
-                  {/* Featured badge removed - kept layout and hover actions intact */}
-
-                  {/* Hover View Button */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                  {/* hover action sits above the overlay and is clickable */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 z-20 pointer-events-auto">
                     <Button className="bg-yellow-400 text-black font-semibold px-6 h-11 rounded-xl">
                       <Eye className="w-4 h-4 mr-2" /> View Game
                     </Button>
