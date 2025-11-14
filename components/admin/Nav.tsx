@@ -11,12 +11,13 @@ export default function AdminNav({ children }: { children?: React.ReactNode }) {
   const [open, setOpen] = useState(false)
 
   const navItems = [
+    { label: "Home", href: "/" },
     { label: "Manage tournaments", href: "/admin" },
-    { label: "Teams", href: "#" },
+    { label: "Games", href: "/admin/games" },
     { label: "Settings", href: "#" },
   ]
 
-  return (
+  return (  
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

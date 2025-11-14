@@ -79,7 +79,7 @@ export default function HeroNav() {
           <Link href="/dashboard">Dashboard</Link>
           <Link href="/tournament">Tournaments</Link>
           <Link href="#">Teams</Link>
-          <Link href="#">Schedule</Link>
+          <Link href="/games">Games</Link>
           <Link href="#">Leaderboard</Link>
         </nav>
 
@@ -160,7 +160,7 @@ export default function HeroNav() {
           <Link href="/dashboard" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Dashboard</Link>
           <Link href="/tournament" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Tournaments</Link>
           <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Teams</a>
-          <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Schedule</a>
+          <Link href="/games" role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Games</Link>
           <a role="menuitem" tabIndex={menuOpen ? 0 : -1} className="py-2 text-sm text-white">Leaderboard</a>
           <div className="pt-2">
             {isMounted ? (

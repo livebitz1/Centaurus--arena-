@@ -8,7 +8,7 @@ declare global {
 function hasRequiredDelegates(client: PrismaClient | undefined) {
   try {
     // check common delegates created from schema
-    return !!client && typeof (client as any).tournament !== 'undefined' && typeof (client as any).registration !== 'undefined';
+    return !!client && typeof (client as any).tournament !== 'undefined' && typeof (client as any).registration !== 'undefined' && typeof (client as any).game !== 'undefined';
   } catch (e) {
     return false;
   }

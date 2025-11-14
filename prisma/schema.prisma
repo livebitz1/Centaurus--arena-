@@ -47,3 +47,11 @@ model Registration {
   members      Json
   createdAt    DateTime @default(now())
 }
+
+// games displayed in the public Games page and manageable by admin
+model Game {
+  id        String   @id @default(cuid())
+  title     String
+  img       String
+  createdAt DateTime @default(now())
+}
