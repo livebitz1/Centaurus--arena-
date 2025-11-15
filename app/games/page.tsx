@@ -24,42 +24,42 @@ export default function GamesPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         <HeroNav />
 
         {/* Hero */}
         <div className="mt-10 mb-16">
-          <div className="relative rounded-3xl bg-black/80 border border-yellow-500/20 p-10 backdrop-blur-2xl shadow-[0_0_30px_rgba(255,215,0,0.08)]">
+          <div className="relative rounded-3xl bg-black/80 border border-yellow-500/20 p-6 sm:p-10 backdrop-blur-2xl shadow-[0_0_18px_rgba(255,215,0,0.06)]">
 
             <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-transparent to-yellow-500/10 rounded-3xl pointer-events-none" />
 
             <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-2xl shadow-inner backdrop-blur">
-                  <Gamepad2 className="w-8 h-8 text-yellow-300" />
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-2xl shadow-inner backdrop-blur">
+                  <Gamepad2 className="w-7 h-7 text-yellow-300" />
                 </div>
 
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded-full backdrop-blur">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full backdrop-blur text-sm">
                   <Sparkles className="w-4 h-4 text-yellow-300" />
-                  <span className="text-sm font-medium text-yellow-300">Featured Collection</span>
+                  <span className="font-medium text-yellow-300">Featured Collection</span>
                 </div>
               </div>
 
-              <h1 className="text-5xl lg:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-yellow-400 mb-3">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-yellow-400 mb-3">
                 Discover Games
               </h1>
-              <p className="text-lg text-white/70 max-w-2xl mb-8">
+              <p className="text-sm sm:text-base text-white/70 max-w-2xl mb-6">
                 Explore our curated collection and pick the game you want to compete in.
               </p>
 
               {/* Search */}
-              <div className="relative max-w-xl">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-yellow-400/50" />
+              <div className="relative max-w-full sm:max-w-xl">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-400/60" />
                 <Input
                   placeholder="Search for games..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-14 pl-12 bg-white/5 border-yellow-500/20 text-white placeholder:text-yellow-200/40 rounded-2xl focus:border-yellow-400/40"
+                  className="h-12 pl-10 pr-4 bg-white/5 border-yellow-500/20 text-white placeholder:text-yellow-200/40 rounded-2xl focus:border-yellow-400/40"
                 />
               </div>
             </div>
@@ -121,11 +121,11 @@ export default function GamesPage() {
           </Card>
         ) : (
           /* Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredGames.map((g) => (
               <Card
                 key={g.id}
-                className="group p-0 overflow-hidden bg-black/70 border border-yellow-500/20 rounded-2xl backdrop-blur-xl shadow-[0_0_15px_rgba(255,215,0,0.08)] hover:shadow-[0_0_25px_rgba(255,215,0,0.2)] transition-all duration-300 hover:-translate-y-1"
+                className="group overflow-hidden bg-black/70 border border-yellow-500/14 rounded-2xl backdrop-blur-md shadow-sm sm:shadow-[0_0_15px_rgba(255,215,0,0.06)] sm:hover:shadow-[0_0_25px_rgba(255,215,0,0.12)] transition-all duration-300 sm:hover:-translate-y-1 p-0"
               >
                 {/* Image */}
                 <div className="relative aspect-[4/3] overflow-hidden">
@@ -135,13 +135,11 @@ export default function GamesPage() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
 
-                  {/* subtle overlay that doesn't block interactions */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-40 group-hover:opacity-60 transition duration-300 pointer-events-none z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-30 group-hover:opacity-60 transition duration-300 pointer-events-none z-10" />
 
-                  {/* hover action sits above the overlay and is clickable */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 z-20 pointer-events-auto">
-                    <Button className="bg-yellow-400 text-black font-semibold px-6 h-11 rounded-xl">
-                      <Eye className="w-4 h-4 mr-2" /> View Game
+                    <Button className="bg-yellow-400 text-black font-semibold px-5 h-10 rounded-xl text-sm">
+                      <Eye className="w-4 h-4 mr-2" /> View
                     </Button>
                   </div>
                 </div>
