@@ -5,20 +5,26 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import { usePathname, useRouter } from 'next/navigation';
 
 export default function AuthGuardClient({ children }: { children: React.ReactNode }) {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
   const { openSignIn } = useClerk();
   const pathname = usePathname();
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    // Only react once Clerk has loaded auth state to avoid flashing the modal
+    if (!isLoaded) {
+      setShowModal(false);
+      return;
+    }
+
     // Show modal when user navigates to any non-root route while unauthenticated.
     if (typeof pathname === 'string' && pathname !== '/' && !isSignedIn) {
       setShowModal(true);
     } else {
       setShowModal(false);
     }
-  }, [pathname, isSignedIn]);
+  }, [pathname, isSignedIn, isLoaded]);
 
   const handleSignIn = () => {
     openSignIn && openSignIn();
