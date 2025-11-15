@@ -14,6 +14,7 @@ export default function AdminNav({ children }: { children?: React.ReactNode }) {
     { label: "Home", href: "/" },
     { label: "Manage tournaments", href: "/admin" },
     { label: "Games", href: "/admin/games" },
+    { label: "Settings", href: "#" },
   ]
 
   return (  
