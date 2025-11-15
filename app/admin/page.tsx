@@ -47,6 +47,11 @@ function AdminContent() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmData, setConfirmData] = useState<{ id?: string; title?: string; showRoom?: boolean; roomId?: string | null; roomPassword?: string | null } | null>(null)
 
+  // Admin auth state (password-protected access)
+  const [authenticated, setAuthenticated] = useState<boolean>(false)
+  const [authChecked, setAuthChecked] = useState<boolean>(false)
+  const [passwordInput, setPasswordInput] = useState<string>('')
+
   // registrations per tournament (used to show remaining slots)
   const [registrations, setRegistrations] = useState<Record<string, number>>({})
 
@@ -250,11 +255,90 @@ function AdminContent() {
       .finally(() => setLoading(false))
   }, [])
 
+  // check authentication on mount
+  useEffect(() => {
+    let isActive = true
+    const doAuthCheck = async () => {
+      try {
+        const res = await fetch('/api/admin/check')
+        if (!isActive) return
+        if (res.ok) {
+          const data = await res.json()
+          setAuthenticated(Boolean(data?.authenticated))
+        } else {
+          setAuthenticated(false)
+        }
+      } catch (e) {
+        console.error('Auth check failed', e)
+        setAuthenticated(false)
+      } finally {
+        if (isActive) setAuthChecked(true)
+      }
+    }
+    doAuthCheck()
+    return () => { isActive = false }
+  }, [])
+
+  async function handleLogin(e?: React.FormEvent) {
+    e?.preventDefault()
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput })
+      })
+      if (res.ok) {
+        setAuthenticated(true)
+        setPasswordInput('')
+      } else {
+        const d = await res.json().catch(() => ({}))
+        alert(d?.error || 'Invalid password')
+      }
+    } catch (e) {
+      console.error('Login failed', e)
+      alert('Login failed')
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' })
+    } catch (e) {
+      console.error('Logout failed', e)
+    } finally {
+      setAuthenticated(false)
+      setAuthChecked(true)
+    }
+  }
+
   return (
     <>
+      {/* Password gate overlay — shown when auth check completes and user is not authenticated */}
+      {authChecked && !authenticated && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl">
+            <h2 className="text-lg font-semibold mb-2">Admin Access</h2>
+            <p className="text-sm text-gray-500 mb-4">Enter the admin password to access the admin panel.</p>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Admin password"
+                className="w-full px-4 py-2 rounded-lg border bg-background text-white"
+              />
+              <div className="flex items-center justify-end gap-2">
+                <button type="button" onClick={() => { setPasswordInput('') }} className="px-4 py-2 rounded-lg bg-white/10">Clear</button>
+                <button type="submit" className="px-4 py-2 rounded-lg bg-yellow-400 text-black font-semibold">Enter</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Manage Tournaments</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-yellow-300">Manage Tournaments</h1>
           <p className="mt-1 text-sm text-muted-foreground">Create, edit and delete tournaments</p>
         </div>
         <Button onClick={openCreate} className="w-full sm:w-auto">
