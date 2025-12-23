@@ -29,7 +29,8 @@ export default function TournamentPage() {
   };
 
   // track tournaments this user has already registered for (client-side cache)
-  const [userRegisteredTournamentIds, setUserRegisteredTournamentIds] = useState<string[]>([]);
+  // null = not yet fetched, [] = fetched and none
+  const [userRegisteredTournamentIds, setUserRegisteredTournamentIds] = useState<string[] | null>(null);
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -93,27 +94,43 @@ export default function TournamentPage() {
     };
   }, [tournaments]);
 
-  // fetch user's registered tournaments when we have an email from Clerk
+  // fetch user's registered tournaments when signed in
   useEffect(() => {
+    // if user explicitly signed out, mark as no registrations for UI
+    if (isSignedIn === false) {
+      setUserRegisteredTournamentIds([]);
+      return;
+    }
+
+    // only fetch when we know user is signed in
+    if (isSignedIn !== true) return;
+
     const email = getUserEmail();
-    if (!email) return;
+    // if email not yet available, keep null (show checking) and wait for user state to update
+    if (!email) {
+      return;
+    }
 
     let mounted = true;
     (async () => {
       try {
         const q = new URLSearchParams({ email: email.toString().trim().toLowerCase() }).toString();
         const res = await fetch(`/api/tournaments/registered?${q}`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (mounted) setUserRegisteredTournamentIds([]);
+          return;
+        }
         const data = await res.json();
         if (!mounted) return;
         setUserRegisteredTournamentIds(Array.isArray(data.tournamentIds) ? data.tournamentIds : data.tournamentIds || []);
       } catch (e) {
         console.error('Failed to fetch user registered tournaments', e);
+        if (mounted) setUserRegisteredTournamentIds([]);
       }
     })();
 
     return () => { mounted = false };
-  }, [user]);
+  }, [user, isSignedIn]);
 
   // modal state
   const [joinModalOpen, setJoinModalOpen] = useState(false);
@@ -244,7 +261,10 @@ export default function TournamentPage() {
           // update registrations count from server
           setRegistrations((prev) => ({ ...prev, [joiningTournament.id]: data.count }));
           // mark user as registered for this tournament locally
-          setUserRegisteredTournamentIds((prev) => Array.from(new Set([...prev, joiningTournament.id])));
+          setUserRegisteredTournamentIds((prev) => {
+            const base = prev ?? [];
+            return Array.from(new Set([...base, joiningTournament.id]));
+          });
           closeJoinModal();
           alert('Registration submitted')
         } else {
@@ -281,14 +301,14 @@ export default function TournamentPage() {
   }, [query, selectedGame, tournaments]);
 
   return (
-      <main className="min-h-screen bg-gradient-to-br from-[#0d0d0d] via-[#1a1a1a] to-[#0d0d0d] text-white">
+      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
               <HeroNav />
 
               {/* Enhanced Header Section */}
               <header className="mt-8 sm:mt-12 mb-8 sm:mb-12">
                   <div className="text-center mb-8">
-                      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent mb-3">
+                      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-cyan-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent mb-3">
                           Live Tournaments
                       </h2>
                       <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto px-4">
@@ -303,13 +323,13 @@ export default function TournamentPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                           </svg>
                           <input
-                              id="t-search"
-                              type="search"
-                              value={query}
-                              onChange={(e) => setQuery(e.target.value)}
-                              placeholder="Search tournaments..."
-                              className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
-                          />
+                               id="t-search"
+                               type="search"
+                               value={query}
+                               onChange={(e) => setQuery(e.target.value)}
+                               placeholder="Search tournaments..."
+                               className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
+                           />
                           {query && (
                               <button
                                   onClick={() => setQuery('')}
@@ -324,15 +344,15 @@ export default function TournamentPage() {
 
                       <div className="relative">
                           <select
-                              id="game-filter"
-                              value={selectedGame}
-                              onChange={(e) => setSelectedGame(e.target.value)}
-                              className="w-full sm:w-auto appearance-none pl-4 pr-10 py-3 border rounded-xl bg-white/5 backdrop-blur-md text-white border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/50 cursor-pointer transition-all"
-                          >
+                               id="game-filter"
+                               value={selectedGame}
+                               onChange={(e) => setSelectedGame(e.target.value)}
+                               className="w-full sm:w-auto appearance-none pl-4 pr-10 py-3 border rounded-xl bg-white/5 backdrop-blur-md text-white border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 cursor-pointer transition-all"
+                           >
                               {games.map((g) => (
                                   <option key={g} value={g} className="bg-gray-900">
-                                      {g}
-                                  </option>
+                                       {g}
+                                   </option>
                               ))}
                           </select>
                           <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -363,7 +383,7 @@ export default function TournamentPage() {
                   filtered.map((t) => (
                       <article 
                           key={t.id} 
-                          className="group rounded-2xl border border-white/10 overflow-hidden bg-white/5 backdrop-blur-sm hover:border-yellow-400/30 hover:shadow-xl hover:shadow-yellow-400/10 transition-all duration-300 flex flex-col"
+                          className="group rounded-2xl border border-white/10 overflow-hidden bg-white/5 backdrop-blur-sm hover:border-cyan-400/30 hover:shadow-xl hover:shadow-cyan-400/10 transition-all duration-300 flex flex-col"
                       >
                           {/* Tournament Image */}
                           <div className="relative h-48 sm:h-52 overflow-hidden">
@@ -379,14 +399,14 @@ export default function TournamentPage() {
                               ) : (
                                   <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
                                       <svg className="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                       </svg>
                                   </div>
                               )}
                               
                               {/* Game Badge */}
                               <div className="absolute top-3 left-3">
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full text-xs font-medium text-yellow-400 border border-yellow-400/30">
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full text-xs font-medium text-cyan-300 border border-cyan-400/20">
                                       <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                           <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                                           <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
@@ -398,7 +418,7 @@ export default function TournamentPage() {
 
                           {/* Card Content */}
                           <div className="p-5 flex-1 flex flex-col">
-                              <h3 className="text-lg sm:text-xl font-bold mb-2 leading-tight text-white group-hover:text-yellow-400 transition-colors line-clamp-2">
+                              <h3 className="text-lg sm:text-xl font-bold mb-2 leading-tight text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
                                   {t.title}
                               </h3>
                               
@@ -434,10 +454,10 @@ export default function TournamentPage() {
                                   {/* Progress Bar */}
                                   <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-4">
                                       <div 
-                                          className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500"
+                                          className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all duration-500"
                                           style={{ width: `${Math.min(100, ((registrations[t.id] || 0) / t.slots) * 100)}%` }}
-                                      />
-                                  </div>
+                                   />
+                                   </div>
 
                                   {/* Action Button */}
                                   <div className="flex">
@@ -451,32 +471,43 @@ export default function TournamentPage() {
                                               </svg>
                                               Tournament Full
                                           </button>
-                                      ) : userRegisteredTournamentIds.includes(t.id) ? (
-                                          <button
-                                            disabled
-                                            className="w-full flex items-center justify-center gap-2 text-sm font-medium bg-green-500/20 text-green-400 px-4 py-2.5 rounded-xl cursor-not-allowed border border-green-400/30"
-                                          >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Already Registered
-                                          </button>
-                                      ) : (
-                                          <button
-                                              onClick={() => openJoinModal(t)}
-                                              className="w-full flex items-center justify-center gap-2 text-sm font-semibold bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black px-4 py-2.5 rounded-xl shadow-lg shadow-yellow-400/20 hover:shadow-yellow-400/40 transition-all duration-300 group"
-                                          >
-                                              <span>Join Tournament</span>
-                                              <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                      ) : (isSignedIn === true && userRegisteredTournamentIds === null) || loading ? (
+                                           // while we are determining whether the user is registered, avoid showing the Join button to prevent a flash
+                                           <button
+                                               disabled
+                                               className="w-full flex items-center justify-center gap-2 text-sm font-medium bg-white/5 text-gray-300 px-4 py-2.5 rounded-xl cursor-not-allowed"
+                                           >
+                                               <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
+                                                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                               </svg>
+                                               <span>Checking…</span>
+                                           </button>
+                                       ) : userRegisteredTournamentIds?.includes(t.id) ? (
+                                            <button
+                                              disabled
+                                              className="w-full flex items-center justify-center gap-2 text-sm font-medium bg-green-500/20 text-green-400 px-4 py-2.5 rounded-xl cursor-not-allowed border border-green-400/30"
+                                            >
+                                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                               </svg>
-                                          </button>
-                                      )}
-                                   </div>
-                              </div>
-                          </div>
-                      </article>
-                  ))
+                                              Already Registered
+                                            </button>
+                                       ) : (
+                                            <button
+                                                onClick={() => openJoinModal(t)}
+                                                className="w-full flex items-center justify-center gap-2 text-sm font-semibold bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-300 group"
+                                            >
+                                                <span>Join Tournament</span>
+                                                <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                </svg>
+                                            </button>
+                                       )}
+                                    </div>
+                                 </div>
+                             </div>
+                         </article>
+                      ))
                 ) : (
                   <div className="col-span-full flex flex-col items-center justify-center py-16 sm:py-20">
                       <svg className="w-16 h-16 sm:w-20 sm:h-20 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -496,16 +527,16 @@ export default function TournamentPage() {
               {filtered.length > 0 && (
                   <footer className="mt-12 text-center">
                       <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
-                          <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                               <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
                           </svg>
                           <span className="text-sm text-gray-300">
-                              Showing <span className="font-semibold text-white">{filtered.length}</span> tournament{filtered.length !== 1 ? 's' : ''}
-                          </span>
-                      </div>
-                  </footer>
-              )}
+                               Showing <span className="font-semibold text-white">{filtered.length}</span> tournament{filtered.length !== 1 ? 's' : ''}
+                           </span>
+                       </div>
+                   </footer>
+               )}
           </div>
 
           {/* Enhanced Registration Modal */}
@@ -515,7 +546,7 @@ export default function TournamentPage() {
 
                   <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-900 to-black rounded-2xl shadow-2xl border border-white/20">
                       {/* Modal Header */}
-                      <div className="sticky top-0 z-10 bg-gradient-to-r from-yellow-400/10 to-yellow-500/10 backdrop-blur-md border-b border-white/10 px-6 py-4">
+                      <div className="sticky top-0 z-10 bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 backdrop-blur-md border-b border-white/10 px-6 py-4">
                           <div className="flex items-start justify-between gap-4">
                               <div>
                                   <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
@@ -542,8 +573,8 @@ export default function TournamentPage() {
                           {/* Team Info Section */}
                           <div className="space-y-4">
                               <div className="flex items-center gap-2 mb-3">
-                                  <div className="w-8 h-8 rounded-lg bg-yellow-400/20 flex items-center justify-center">
-                                      <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                  <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                                      <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
                                           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                                       </svg>
                                   </div>
@@ -558,7 +589,7 @@ export default function TournamentPage() {
                                       <input
                                           value={form.teamName}
                                           onChange={(e) => handleFormChange('teamName', e.target.value)}
-                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                           placeholder="Enter team name"
                                           required
                                       />
@@ -570,7 +601,7 @@ export default function TournamentPage() {
                                       <input
                                           value={form.university}
                                           onChange={(e) => handleFormChange('university', e.target.value)}
-                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                           placeholder="Enter university"
                                           required
                                       />
@@ -584,7 +615,7 @@ export default function TournamentPage() {
                                   <input
                                       value={form.phone}
                                       onChange={(e) => handleFormChange('phone', e.target.value)}
-                                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                       placeholder="Enter phone number"
                                   />
                               </div>
@@ -609,7 +640,7 @@ export default function TournamentPage() {
                                       <input
                                           value={form.leader.name}
                                           onChange={(e) => handleFormChange('leader.name', e.target.value)}
-                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                           placeholder="Leader name"
                                           required
                                       />
@@ -622,7 +653,7 @@ export default function TournamentPage() {
                                           value={form.leader.email}
                                           onChange={(e) => handleFormChange('leader.email', e.target.value)}
                                           type="email"
-                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                           placeholder="leader@email.com"
                                           required
                                       />
@@ -634,7 +665,7 @@ export default function TournamentPage() {
                                       <input
                                           value={form.leader.registrationNo}
                                           onChange={(e) => handleFormChange('leader.registrationNo', e.target.value)}
-                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                           placeholder="Registration no."
                                           required
                                       />
@@ -646,7 +677,7 @@ export default function TournamentPage() {
                                       <input
                                           value={form.leader.gameId}
                                           onChange={(e) => handleFormChange('leader.gameId', e.target.value)}
-                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                           placeholder="Game ID"
                                           required
                                       />
@@ -694,7 +725,7 @@ export default function TournamentPage() {
                                                   <input
                                                       value={m.name}
                                                       onChange={(e) => handleFormChange(`members.${idx}.name`, e.target.value)}
-                                                      className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                                      className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                                       placeholder="Member name"
                                                       required
                                                   />
@@ -706,7 +737,7 @@ export default function TournamentPage() {
                                                   <input
                                                       value={m.registrationNo}
                                                       onChange={(e) => handleFormChange(`members.${idx}.registrationNo`, e.target.value)}
-                                                      className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                                      className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                                       placeholder="Reg. number"
                                                       required
                                                   />
@@ -718,7 +749,7 @@ export default function TournamentPage() {
                                                   <input
                                                       value={m.gameId}
                                                       onChange={(e) => handleFormChange(`members.${idx}.gameId`, e.target.value)}
-                                                      className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
+                                                      className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                                                       placeholder="Game ID"
                                                       required
                                                   />
@@ -743,11 +774,11 @@ export default function TournamentPage() {
                               </button>
 
                               {form.members.length >= MAX_MEMBERS && (
-                                  <div className="flex items-start gap-2 p-3 bg-yellow-400/10 border border-yellow-400/30 rounded-lg">
-                                      <svg className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                  <div className="flex items-start gap-2 p-3 bg-cyan-400/10 border border-cyan-400/30 rounded-lg">
+                                      <svg className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z" clipRule="evenodd" />
                                       </svg>
-                                      <p className="text-xs text-yellow-400">
+                                      <p className="text-xs text-cyan-400">
                                           Maximum team size reached. You can add up to {MAX_MEMBERS} members for this tournament.
                                       </p>
                                   </div>
@@ -766,7 +797,7 @@ export default function TournamentPage() {
                               <button
                                   type="submit"
                                   disabled={submitting}
-                                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black font-semibold rounded-xl shadow-lg shadow-yellow-400/20 hover:shadow-yellow-400/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600 text-black font-semibold rounded-xl shadow-lg shadow-cyan-400/20 hover:shadow-cyan-400/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                   {submitting ? (
                                       <>

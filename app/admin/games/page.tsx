@@ -25,6 +25,8 @@ export default function AdminGamesPage() {
   const [editLoading, setEditLoading] = useState(false)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const [toDeleteId, setToDeleteId] = useState<string | null>(null)
+  // track deleting ids to show per-card loading state
+  const [deletingIds, setDeletingIds] = useState<string[]>([])
 
   // Admin password guard: prompt whenever this page mounts
   const [isAdminVerified, setIsAdminVerified] = useState(false)
@@ -120,14 +122,18 @@ export default function AdminGamesPage() {
 
   async function confirmDelete() {
     if (!toDeleteId) return
+    // show loading state on the card being deleted
+    setDeletingIds((s) => [...s, toDeleteId])
     try {
       const res = await fetch(`/api/admin/games/${toDeleteId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')
       setGames((prev) => prev.filter((g) => g.id !== toDeleteId))
     } catch (err) {
-      console.error(err)
+      console.error('Failed to delete game:', err)
       alert('Failed to delete')
     } finally {
+      // remove deleting state and close confirm
+      setDeletingIds((s) => s.filter((id) => id !== toDeleteId))
       setConfirmDeleteOpen(false)
       setToDeleteId(null)
     }
@@ -351,7 +357,7 @@ export default function AdminGamesPage() {
                 {filteredGames.map((g) => (
                   <Card 
                     key={g.id} 
-                    className="group overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white dark:bg-slate-900 hover:-translate-y-1 p-0"
+                    className="relative group overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white dark:bg-slate-900 hover:-translate-y-1 p-0"
                   >
                     <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800 m-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -397,6 +403,16 @@ export default function AdminGamesPage() {
                         })}
                       </div>
                     </CardContent>
+
+                    {/* Deleting overlay: shown only for the card being removed */}
+                    {deletingIds.includes(g.id) && (
+                      <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 rounded-2xl">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+                          <div className="text-sm text-white">Deleting...</div>
+                        </div>
+                      </div>
+                    )}
                   </Card>
                 ))}
               </div>
