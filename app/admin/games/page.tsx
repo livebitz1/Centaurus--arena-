@@ -199,20 +199,20 @@ export default function AdminGamesPage() {
 
       {/* Only render the admin UI when verified */}
       {!isAdminVerified ? null : (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
             
             {/* Header Section */}
             <div className="mb-8 lg:mb-12">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow-lg shadow-violet-500/20">
+                <div className="p-2.5 bg-gradient-to-br from-cyan-500 to-emerald-500 rounded-xl shadow-lg shadow-cyan-500/20">
                   <Gamepad2 className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                  <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-50 to-slate-300 bg-clip-text text-transparent">
                     Games Management
                   </h1>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                  <p className="text-sm text-slate-300 mt-1">
                     Create, edit and manage game catalog
                   </p>
                 </div>
@@ -223,8 +223,8 @@ export default function AdminGamesPage() {
             <Card className="mb-8 lg:mb-12 overflow-hidden border-0 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
               <div className="p-6 lg:p-8">
                 <div className="flex items-center gap-2 mb-6">
-                  <Plus className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Add New Game</h2>
+                  <Plus className="w-5 h-5 text-cyan-400" />
+                  <h2 className="text-xl font-semibold text-slate-50">Add New Game</h2>
                 </div>
                 
                 <form onSubmit={createGame}>
@@ -232,7 +232,7 @@ export default function AdminGamesPage() {
                     
                     {/* Preview Section */}
                     <div className="lg:col-span-3">
-                      <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 group hover:border-violet-400 dark:hover:border-violet-600 transition-all duration-300">
+                      <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-dashed border-slate-700 group hover:border-cyan-400 transition-all duration-300">
                         {preview ? (
                           <>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -265,7 +265,7 @@ export default function AdminGamesPage() {
                             placeholder="Enter game title" 
                             value={title} 
                             onChange={(e) => setTitle(e.target.value)}
-                            className="h-12 text-base border-slate-200 dark:border-slate-700 focus:border-violet-500 dark:focus:border-violet-500 focus:ring-violet-500/20 rounded-xl"
+                            className="h-12 text-base border-slate-700 focus:border-cyan-500 focus:ring-cyan-500/20 rounded-xl bg-white/3 text-slate-50"
                           />
                         </div>
 
@@ -278,7 +278,7 @@ export default function AdminGamesPage() {
                             placeholder="https://example.com/image.jpg" 
                             value={imgUrl} 
                             onChange={(e) => setImgUrl(e.target.value)}
-                            className="h-12 text-base border-slate-200 dark:border-slate-700 focus:border-violet-500 dark:focus:border-violet-500 focus:ring-violet-500/20 rounded-xl"
+                            className="h-12 text-base border-slate-700 focus:border-cyan-500 focus:ring-cyan-500/20 rounded-xl bg-white/3 text-slate-50"
                           />
                         </div>
                       </div>
@@ -296,7 +296,7 @@ export default function AdminGamesPage() {
                         <Button 
                           type="submit" 
                           disabled={loading}
-                          className="h-11 px-8 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 transition-all duration-300"
+                          className="h-11 px-8 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 transition-all duration-300"
                         >
                           {loading ? (
                             <>
@@ -320,8 +320,8 @@ export default function AdminGamesPage() {
             {/* Search and Stats */}
             <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="text-sm text-slate-600 dark:text-slate-400">
-                  <span className="font-semibold text-2xl text-slate-900 dark:text-white">{games.length}</span>
+                <div className="text-sm text-slate-300">
+                  <span className="font-semibold text-2xl text-slate-50">{games.length}</span>
                   <span className="ml-2">Total Games</span>
                 </div>
               </div>
@@ -332,7 +332,7 @@ export default function AdminGamesPage() {
                   placeholder="Search games..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-11 border-slate-200 dark:border-slate-700 rounded-xl focus:border-violet-500 dark:focus:border-violet-500 focus:ring-violet-500/20"
+                  className="pl-10 h-11 border-slate-700 rounded-xl focus:border-cyan-500 focus:ring-cyan-500/20 bg-white/3 text-slate-50"
                 />
               </div>
             </div>
@@ -357,7 +357,7 @@ export default function AdminGamesPage() {
                 {filteredGames.map((g) => (
                   <Card 
                     key={g.id} 
-                    className="relative group overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white dark:bg-slate-900 hover:-translate-y-1 p-0"
+                    className="relative group overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white/5 hover:-translate-y-1 p-0"
                   >
                     <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800 m-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -391,7 +391,7 @@ export default function AdminGamesPage() {
                     </div>
                     
                     <CardContent className="p-5">
-                      <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2 line-clamp-1 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                      <h3 className="font-semibold text-lg text-slate-50 mb-2 line-clamp-1 group-hover:text-cyan-400 transition-colors">
                         {g.title}
                       </h3>
                       <div className="flex items-center text-xs text-slate-500 dark:text-slate-400">

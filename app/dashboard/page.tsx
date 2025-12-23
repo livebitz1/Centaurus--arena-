@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useUser } from "@clerk/nextjs"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -291,6 +292,8 @@ export default function DashboardPage() {
   const [globalCounts, setGlobalCounts] = useState<Record<string, number>>({})
   const [tournamentsMap, setTournamentsMap] = useState<Record<string, any>>({})
   const [filter, setFilter] = useState("")
+  const [showNextEventModal, setShowNextEventModal] = useState(false)
+  const [nextEventFull, setNextEventFull] = useState<string | null>(null)
 
   useEffect(() => {
     const email = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress
@@ -313,6 +316,43 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false))
   }, [user])
+
+  // Fetch public tournaments to enrich tournament data shown on dashboard (titles, dates)
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await fetch('/api/tournaments')
+        if (!res.ok) return
+        const data = await res.json()
+
+        let list: any[] = []
+        if (Array.isArray(data)) list = data
+        else if (Array.isArray(data.tournaments)) list = data.tournaments
+        else if (Array.isArray(data.items)) list = data.items
+        else if (Array.isArray(data.results)) list = data.results
+        else if (data && typeof data === 'object') {
+          // try to extract array-like values
+          const vals = Object.values(data).find((v) => Array.isArray(v))
+          if (Array.isArray(vals)) list = vals as any[]
+        }
+
+        const map: Record<string, any> = {}
+        list.forEach((t: any) => {
+          if (t) {
+            const key = t.id ?? t._id ?? t.uuid ?? t.uid ?? null
+            if (key != null) map[String(key)] = t
+          }
+        })
+        if (mounted) setTournamentsMap(map)
+      } catch (err) {
+        console.error('Failed to load public tournaments', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const exportCSV = () => {
     if (!registrations.length) return
@@ -393,6 +433,91 @@ export default function DashboardPage() {
 
   const totalMembers = registrations.reduce((acc, r) => acc + ((r.members || []).length + 1), 0)
 
+  // compute the user's next upcoming tournament (real data from registrations/tournamentsMap)
+  const now = new Date()
+
+  const parseDateSafe = (s?: string | null) => {
+    if (!s) return null
+    const d = Date.parse(s)
+    if (!isNaN(d)) return new Date(d)
+
+    // try common '9 Nov' style by appending current year
+    const m = String(s).match(/(\d{1,2})\s+([A-Za-z]+)/)
+    if (m) {
+      const day = Number(m[1])
+      const monthName = m[2]
+      const year = new Date().getFullYear()
+      const cand = new Date(`${monthName} ${day}, ${year}`)
+      if (!isNaN(cand.getTime())) return cand
+    }
+
+    return null
+  }
+
+  let nextEventLabel: string = "TBD"
+  try {
+    const seen = new Map<string, { title: string; parsed?: Date }>()
+
+    // helper: find tournament in tournamentsMap by title (case-insensitive)
+    const findByTitle = (title?: string) => {
+      if (!title) return undefined
+      const key = Object.keys(tournamentsMap).find((k) => {
+        const t = tournamentsMap[k]
+        const tTitle = (t && (t.title || t.name) || '') as string
+        return tTitle && tTitle.toString().trim().toLowerCase() === String(title).trim().toLowerCase()
+      })
+      return key ? tournamentsMap[key] : undefined
+    }
+
+    for (const r of registrations) {
+      const rawId = r.tournamentId ?? r.tournament_id ?? r.tournamentid ?? null
+      const idKey = rawId != null ? String(rawId) : null
+
+      // determine tournament object by id or by title
+      let t = null
+      if (idKey && tournamentsMap[idKey]) t = tournamentsMap[idKey]
+      const titleFallback = r.tournament_title || r.tournament_title || r.tournament || null
+      if (!t && titleFallback) {
+        t = findByTitle(titleFallback) || null
+      }
+
+      const title = (t && (t.title || t.name)) || titleFallback || 'Untitled'
+
+      // prefer date from tournament object, then registration fields
+      const dateStr = (t && (t.date || t.createdAt)) || r.tournament_date || r.date || r.tournament_date || null
+      const parsed = parseDateSafe(dateStr)
+
+      // use idKey if available for uniqueness, otherwise use title
+      const seenKey = idKey ?? title
+      if (seen.has(seenKey)) continue
+      seen.set(seenKey, { title, parsed: parsed ?? undefined })
+    }
+
+    const arr = Array.from(seen.values())
+    if (arr.length > 0) {
+      // prefer future events
+      const future = arr.filter((a) => a.parsed && a.parsed.getTime() >= now.getTime()).sort((a, b) => (a.parsed!.getTime() - b.parsed!.getTime()))
+      if (future.length > 0) {
+        const next = future[0]
+        const fmt = next.parsed!.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        nextEventLabel = `${next.title} — ${fmt}`
+      } else {
+        // no future dates: pick nearest by absolute difference
+        const withDates = arr.filter((a) => a.parsed).sort((a, b) => Math.abs(a.parsed!.getTime() - now.getTime()) - Math.abs(b.parsed!.getTime() - now.getTime()))
+        if (withDates.length > 0) {
+          const pick = withDates[0]
+          const fmt = pick.parsed!.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+          nextEventLabel = `${pick.title} — ${fmt}`
+        } else {
+          // no parsable dates: show first registered title
+          nextEventLabel = arr[0].title
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to compute next event', e)
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50 overflow-hidden">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -431,7 +556,7 @@ export default function DashboardPage() {
               },
               { label: "Total Members", value: totalMembers, icon: Users, color: "from-cyan-600 to-blue-600" },
               { label: "Win Rate", value: "—", icon: TrendingUp, color: "from-emerald-600 to-green-600" },
-              { label: "Next Event", value: "TBD", icon: Calendar, color: "from-purple-600 to-pink-600" },
+              { label: "Next Event", value: nextEventLabel, icon: Calendar, color: "from-purple-600 to-pink-600" },
             ].map((stat, i) => (
               <div
                 key={i}
@@ -445,7 +570,25 @@ export default function DashboardPage() {
                     <stat.icon className="w-3.5 h-3.5 text-white" />
                   </div>
                 </div>
-                <p className="text-xl font-bold text-slate-50">{stat.value}</p>
+
+                {/* Responsive value: allow Next Event to wrap and scale on small screens */}
+                {stat.label === "Next Event" ? (
+                  <div className="text-slate-50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNextEventFull(String(stat.value ?? ''))
+                        setShowNextEventModal(true)
+                      }}
+                      className="text-left w-full"
+                      aria-label="View full next event"
+                    >
+                      <p className="text-lg sm:text-xl font-bold leading-tight truncate max-w-full">{stat.value}</p>
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xl font-bold text-slate-50">{stat.value}</p>
+                )}
               </div>
             ))}
           </div>
@@ -506,13 +649,13 @@ export default function DashboardPage() {
 
                     <Button
                       asChild
-                      className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 font-semibold py-2.5 h-auto rounded-lg border border-cyan-500/20 transition-all duration-300 group/btn"
+                      className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 font-semibold py-2.5 px-4 sm:px-6 h-auto rounded-lg border border-cyan-500/20 transition-all duration-300 group/btn"
                     >
-                      <a href="/tournament" className="flex items-center justify-center gap-2">
-                        <Gamepad2 className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                        Browse Tournaments
-                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                      </a>
+                      <Link href="/tournament" className="flex items-center justify-center gap-2 min-w-0">
+                        <Gamepad2 className="w-4 h-4 flex-shrink-0 group-hover/btn:scale-110 transition-transform" />
+                        <span className="truncate">Browse</span>
+                        <ArrowRight className="w-4 h-4 flex-shrink-0 hidden xs:inline-block sm:inline-block group-hover/btn:translate-x-1 transition-transform" />
+                      </Link>
                     </Button>
                   </div>
                 ) : (
@@ -624,7 +767,7 @@ export default function DashboardPage() {
                   return arr.map((t: any) => {
                     const totalRegistered = Number(globalCounts[t.id] ?? 0)
                     const remaining = Math.max(0, Number(t.slots || 0) - totalRegistered)
-                    const fillPercentage = ((totalRegistered / (t.slots || 1)) * 100).toFixed(0)
+                    const fillPercentage = Math.min(100, Math.round((totalRegistered / (t.slots || 1)) * 100))
 
                     return (
                       <article
@@ -787,6 +930,27 @@ export default function DashboardPage() {
             </Card>
           </div>
         </div>
+
+        {/* Dialog to show full Next Event title when truncated */}
+        <Dialog open={showNextEventModal} onOpenChange={setShowNextEventModal}>
+          <DialogContent className="w-full max-w-md bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 rounded-xl shadow-2xl text-slate-50">
+            <DialogHeader>
+              <DialogTitle>Next Event</DialogTitle>
+              <DialogDescription className="text-slate-300">Full event name and date</DialogDescription>
+            </DialogHeader>
+            <div className="p-4">
+              <p className="text-lg font-semibold text-slate-50 break-words">{nextEventFull}</p>
+            </div>
+            <div className="p-4 flex justify-end">
+              <Button
+                onClick={() => setShowNextEventModal(false)}
+                className="bg-white/5 border border-white/10 text-slate-50 transition-none hover:shadow-none hover:scale-100 hover:bg-white/5"
+              >
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </main>
   )
