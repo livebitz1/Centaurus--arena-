@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
-import { Trash2, Edit2, Eye, Filter, X, Plus, Search, Users, Calendar, MapPin, Gamepad2, Menu, ChevronDown, Download, AlertCircle } from "lucide-react"
+import { Trash2, Edit2, Eye, Filter, X, Plus, Search, Users, Calendar, MapPin, Gamepad2, Menu, ChevronDown, Download, AlertCircle, Lock } from "lucide-react"
 import AdminNav from "@/components/admin/Nav"
 
 type Tournament = {
@@ -31,6 +31,7 @@ function EnhancedAdminPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [editing, setEditing] = useState<Tournament | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [totalPlayers, setTotalPlayers] = useState<number>(0)
   const [form, setForm] = useState<Partial<Tournament>>({})
   const [regsOpen, setRegsOpen] = useState(false)
   const [currentRegs, setCurrentRegs] = useState<any[]>([])
@@ -112,6 +113,72 @@ function EnhancedAdminPage() {
     shared: tournaments.filter((t) => Boolean(t.showRoom)).length,
     totalSlots: tournaments.reduce((acc, t) => acc + t.slots, 0),
   }
+
+  // fetch total registered players (try sensible endpoints; fallback to 0)
+  React.useEffect(() => {
+    let mounted = true
+
+    const fetchCount = async () => {
+      try {
+        // primary: server route that returns { count }
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 8000)
+
+        const res = await fetch('/api/admin/users/count', { signal: controller.signal })
+        clearTimeout(timeout)
+
+        if (res.ok) {
+          const data = await res.json()
+          const val = Number(data?.count ?? data?.total ?? data)
+          if (mounted && Number.isFinite(val)) {
+            setTotalPlayers(Math.max(0, Math.floor(val)))
+            return
+          }
+        }
+
+        // fallback: try a public users endpoint that returns an array
+        const res2 = await fetch('/api/users')
+        if (res2.ok) {
+          const data = await res2.json()
+          if (Array.isArray(data)) {
+            if (mounted) setTotalPlayers(data.length)
+            return
+          }
+          if (Array.isArray(data?.users)) {
+            if (mounted) setTotalPlayers(data.users.length)
+            return
+          }
+        }
+
+        // final fallback: try an admin list endpoint
+        const res3 = await fetch('/api/admin/users')
+        if (res3.ok) {
+          const data = await res3.json()
+          if (Array.isArray(data)) {
+            if (mounted) setTotalPlayers(data.length)
+            return
+          }
+          if (Array.isArray(data?.users)) {
+            if (mounted) setTotalPlayers(data.users.length)
+            return
+          }
+        }
+      } catch (e) {
+        // network/abort errors
+        if ((e as any)?.name === 'AbortError') {
+          console.warn('User count fetch aborted')
+        } else {
+          console.error('Failed to fetch total players', e)
+        }
+      }
+    }
+
+    fetchCount()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   function openCreate() {
     setForm({ title: "", date: "", location: "", slots: 8, game: "", img: "", roomId: "", roomPassword: "", showRoom: false })
@@ -279,12 +346,12 @@ function EnhancedAdminPage() {
       {adminModalOpen && !isAdminVerified && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-black/70">
           <div className="absolute inset-0" onClick={handleAdminClose} />
-          <form onSubmit={submitAdminPassword} className="relative z-10 w-full max-w-md bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 rounded-2xl shadow-2xl p-8 animate-in fade-in zoom-in duration-300">
-            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30">
-              <AlertCircle className="w-8 h-8 text-cyan-400" />
+          <form onSubmit={submitAdminPassword} className="relative z-10 w-full max-w-md bg-gradient-to-br from-slate-900/95 to-slate-800/95 border border-white/6 rounded-2xl shadow-2xl p-8 animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-slate-800 to-slate-700 ring-1 ring-cyan-600/25 shadow-md">
+              <Lock className="w-8 h-8 text-cyan-400" />
             </div>
-            <h3 className="text-2xl font-bold text-center text-slate-50 mb-2">Admin Access</h3>
-            <p className="text-sm text-center text-slate-400 mb-6">Enter your admin password to manage tournaments</p>
+            <h3 className="text-2xl font-semibold text-center text-slate-50 mb-1">Admin Access</h3>
+            <p className="text-sm text-center text-slate-400 mb-5">Enter your admin password to manage tournaments</p>
 
             <div className="space-y-4">
               <div>
@@ -293,15 +360,17 @@ function EnhancedAdminPage() {
                   type="password"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-slate-50 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition"
+                  className="w-full px-4 py-3 bg-white/3 border border-slate-700 rounded-lg text-slate-50 placeholder-slate-450 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500 transition-shadow"
                   placeholder="Enter admin password"
                   autoFocus
                 />
               </div>
               {adminError && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                  <p className="text-sm text-red-400">{adminError}</p>
+                <div className="flex items-start gap-3 px-4 py-3 bg-red-600/10 border border-red-600/30 rounded-md">
+                  <div className="flex-shrink-0 bg-red-600/20 p-2 rounded-full">
+                    <AlertCircle className="w-4 h-4 text-red-400" />
+                  </div>
+                  <p className="text-sm text-red-300">{adminError}</p>
                 </div>
               )}
             </div>
@@ -310,13 +379,13 @@ function EnhancedAdminPage() {
               <button 
                 type="button" 
                 onClick={handleAdminClose} 
-                className="flex-1 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-50 font-medium hover:bg-white/10 transition"
+                className="flex-1 px-4 py-3 rounded-lg bg-white/5 border border-white/8 text-slate-50 font-medium hover:bg-white/6 transition-colors"
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-semibold hover:from-cyan-600 hover:to-emerald-600 transition shadow-lg shadow-cyan-500/25"
+                className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-semibold shadow-lg shadow-cyan-500/20 hover:translate-y-0.5 transition-transform"
               >
                 Unlock
               </button>
@@ -360,10 +429,10 @@ function EnhancedAdminPage() {
               </div>
               <div className="bg-gradient-to-br from-slate-800/60 to-slate-800/40 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:border-emerald-500/30 transition">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-slate-400 text-sm font-medium">Active</span>
-                  <Calendar className="w-5 h-5 text-emerald-400" />
+                  <span className="text-slate-400 text-sm font-medium">Total Players</span>
+                  <Users className="w-5 h-5 text-emerald-400" />
                 </div>
-                <p className="text-3xl font-bold text-slate-50">{stats.active}</p>
+                <p className="text-3xl font-bold text-slate-50">{totalPlayers.toLocaleString()}</p>
               </div>
               <div className="bg-gradient-to-br from-slate-800/60 to-slate-800/40 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:border-purple-500/30 transition">
                 <div className="flex items-center justify-between mb-2">
